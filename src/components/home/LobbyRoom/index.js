@@ -63,7 +63,6 @@ const LobbyRoom = ({ tracks }) => {
   });
   
   const moderator = useRef(true);
-
   const useStyles = makeStyles((theme) => ({
     root: {
       display: "flex",
@@ -302,7 +301,6 @@ const LobbyRoom = ({ tracks }) => {
     connection.addEventListener(
       SariskaMediaTransport.events.connection.CONNECTION_FAILED,
       async (error) => {
-        console.log(" CONNECTION_DROPPED_ERROR", error);
         if (
           error === SariskaMediaTransport.errors.connection.PASSWORD_REQUIRED
         ) {
@@ -378,6 +376,7 @@ const LobbyRoom = ({ tracks }) => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.CONFERENCE_FAILED,
       async (error) => {
+        console.log('CONFERENCE_FAILED', error)
         if (
           error === SariskaMediaTransport.errors.conference.MEMBERS_ONLY_ERROR
         ) {
@@ -419,12 +418,11 @@ const LobbyRoom = ({ tracks }) => {
     dispatch(localTrackMutedChanged());
   };
 
-  if (iAmRecorder && !meetingTitle) {
-    setName("recorder");
-    setMeetingTitle(queryParams.meetingId);
-  }
-
   useEffect(() => {
+    if (iAmRecorder && !meetingTitle) {
+      setName("recorder");
+      setMeetingTitle(queryParams.meetingId);
+    }
     if (meetingTitle && (testMode || iAmRecorder)) {
       handleSubmit();
     }

@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import {GENERATE_TOKEN_URL, GET_PRESIGNED_URL, ENTER_FULL_SCREEN_MODE, LIVE_STREAMING_START_URL, LIVE_STREAMING_STOP_URL} from "../constants";
+import {GENERATE_TOKEN_URL, GET_PRESIGNED_URL, ENTER_FULL_SCREEN_MODE, LIVE_STREAMING_START_URL, LIVE_STREAMING_STOP_URL, ANNOTATION_TOOLS} from "../constants";
 import linkifyHtml from 'linkify-html';
 
 const Compressor = require('compressorjs');
@@ -696,3 +696,45 @@ export const isModerator = (conference) => {
         return false;
     }
   }
+
+  export const getAnnotator = (conference, annotation) => {
+    if(!conference) return null;
+    return conference?.getParticipantsWithoutHidden()?.find(participant => participant._properties?.annotation === "start") || annotation.annotator;  
+  }
+
+  export const isAnnotator = (conference, annotation) => {
+    if(!conference) return null;
+    let annotator = getAnnotator(conference, annotation);
+    return (annotator && Object.keys(annotator)?.length) ? true : false
+  }
+
+  export const getAnnotationTool = (annotation) => {
+    switch(annotation.feature){
+        case ANNOTATION_TOOLS.pen:
+            return ANNOTATION_TOOLS.pen;
+        case ANNOTATION_TOOLS.emoji:
+            return ANNOTATION_TOOLS.emoji;
+        case ANNOTATION_TOOLS.circle:
+            return ANNOTATION_TOOLS.circle;
+        case ANNOTATION_TOOLS.textBox:
+            return ANNOTATION_TOOLS.textBox;
+        default:
+            return '';
+    }
+  }
+
+  export function clearCanvas(ctx, width, height){
+    ctx.clearRect(0, 0, width, height)
+}
+
+export function computePointInCanvas(clientX, clientY, refCurrent){
+    if(refCurrent){
+        const boundingRect = refCurrent.getBoundingClientRect();
+        return {
+            x: clientX - boundingRect.left,
+            y: clientY - boundingRect.top
+        }
+    }else{
+        return null;
+    }
+}
