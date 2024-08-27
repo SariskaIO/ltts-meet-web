@@ -19,6 +19,7 @@ import ColorLensIcon from '@material-ui/icons/ColorLens';
 import GestureIcon from '@material-ui/icons/Gesture';
 import SentimentSatisfiedOutlinedIcon from '@material-ui/icons/SentimentSatisfiedOutlined';
 import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
+import RadioButtonUncheckedOutlinedIcon from '@material-ui/icons/RadioButtonUncheckedOutlined';
 import TextFieldsIcon from '@material-ui/icons/TextFields';
 import LayersClearIcon from '@material-ui/icons/LayersClear';
 import MicIcon from "@material-ui/icons/Mic";
@@ -322,7 +323,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     emoji: false
   }
   const { feature } = useSelector(state => state.annotation);
-
   const [openLivestreamDialog, setOpenLivestreamDialog] = useState(false);
   const [broadcasts, setBroadcasts] = useState([]);
   const [streamingUrls, setStreamingUrls] = useState([]);
@@ -1145,20 +1145,17 @@ const ActionButtons = ({ dominantSpeakerId }) => {
             )
           }
         </StyledTooltip>
-        {/* <StyledTooltip
-          title={isAnnotation.circle
-                ? "Cancel"
-                : "Draw Circle"
-          }
+        <StyledTooltip
+          title={"Circle"}
         >
-          {isAnnotation.circle ? (
-              <RadioButtonUncheckedIcon onClick={stopToDrawCircle} className={classes.active} />
+          {feature === ANNOTATION_TOOLS.circle ? (
+              <RadioButtonUncheckedOutlinedIcon onClick={stopAnnotation} className={classes.active} />
             ) : (
-              <RadioButtonUncheckedIcon onClick={startToDrawCircle} />
+              <RadioButtonUncheckedOutlinedIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.circle)} />
             )
           }
         </StyledTooltip>
-        <StyledTooltip
+        {/* <StyledTooltip
           title={isAnnotation.textBox
                 ? "Cancel"
                 : "Text Box"

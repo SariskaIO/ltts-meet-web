@@ -240,6 +240,9 @@ const Meeting = () => {
       if (item._properties?.annotationTool === ANNOTATION_TOOLS.emoji) {
         dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.emoji));
       }
+      if (item._properties?.annotationTool === ANNOTATION_TOOLS.circle) {
+        dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.circle));
+      }
 
       if (item._properties?.isModerator === "true") {
         dispatch(setModerator({ participantId: item._id, isModerator: true }));
@@ -356,6 +359,9 @@ const Meeting = () => {
         }
         if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL && newValue === ANNOTATION_TOOLS.emoji) {  
           dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.emoji));
+        }
+        if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL && newValue === ANNOTATION_TOOLS.circle) {
+          dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, ANNOTATION_TOOLS.circle));
         }
 
         if (key === PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL && newValue === "") {

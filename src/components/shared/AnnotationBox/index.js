@@ -18,20 +18,13 @@ import VideoBoxContent from "../VideoBoxContent";
     isLargeVideo,
     isTranscription,
     numParticipants,
-    visiblePinParticipant,
-    // handleColor,
-    // lineColor,
-    // handleClearCanvas,
+    visiblePinParticipant
   }) => {
     const conference = useSelector((state) => state.conference);
     const annotation = useSelector((state) => state.annotation);
     
     const canvasRef = useRef(null);
-      
-      // useEffect(()=>{
-      //   console.log('prop changed', lineColor)
-      // },[lineColor])
-      
+
     return (
       <SariskaCollaborativeAnnotation
               width={width}
@@ -46,13 +39,6 @@ import VideoBoxContent from "../VideoBoxContent";
               parentCanvasRef={canvasRef}
               annotationTool={getAnnotationTool(annotation)}
               emojiType = '😎'
-              // penProps = {{
-              //   color: annotation.style.color,
-              //   width: annotation.style.width,
-              // }}
-              // emojiProps={{
-              //   type: '😎'
-              // }}
       >
         
             <VideoBoxContent 
