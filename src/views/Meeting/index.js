@@ -218,6 +218,7 @@ const Meeting = () => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.TRACK_REMOVED,
       (track) => {
+        console.log('TRACK_REMOVED', track);
         dispatch(removeRemoteTrack(track));
       }
     );
@@ -225,6 +226,7 @@ const Meeting = () => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.TRACK_ADDED,
       (track) => {
+        console.log('TRACK_ADDED', track);
         if (track.isLocal()) {
           return;
         }

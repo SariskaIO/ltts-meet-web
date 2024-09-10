@@ -118,21 +118,32 @@ const CompositeLayout = () => {
     const classes = useStyles();
     let largeVideoId, isPresenter, participantTracks, participantDetails, justifyContent;
 
-    if ( conference.getParticipantCount() === 2 ) {
-        largeVideoId = conference.getParticipantsWithoutHidden()[0]?._id;
-    }
-    largeVideoId = layout.pinnedParticipant.participantId || layout.presenterParticipantIds.slice(0).pop() || largeVideoId || myUserId;
-    isPresenter = layout.presenterParticipantIds.find(item=>item===largeVideoId);
-    if ( layout.pinnedParticipant.isPresenter === false ) {
-        isPresenter = false;
-    }
+    // if ( conference.getParticipantCount() === 2 ) {
+    //     largeVideoId = conference.getParticipantsWithoutHidden()[0]?._id;
+    // }
+    // largeVideoId = layout.pinnedParticipant.participantId || layout.presenterParticipantIds.slice(0).pop() || largeVideoId || myUserId;
+   // isPresenter = layout.presenterParticipantIds.find(item=>item===largeVideoId);
+    // if ( layout.pinnedParticipant.isPresenter === false ) {
+    //     isPresenter = false;
+    // }
+
+    const tracks = { ...remoteTracks, [conference.myUserId()]: localTracks };
+    let recorderId;
+      tracks && Object.entries(tracks).map((key) => {
+        console.log('key valie', key, key[1]);
+        if(!(key[1] && key[1]?.length)){
+          recorderId = key[0]
+        }else{
+          largeVideoId = key[0];
+        }
+      })      
     participantTracks = remoteTracks[largeVideoId];
     participantDetails =  conference.participants.get(largeVideoId)?._identity?.user; 
 
-    if (largeVideoId === conference.myUserId()){
-        participantTracks = localTracks;
-        participantDetails = conference.getLocalUser();
-    }
+    // if (largeVideoId === conference.myUserId()){
+    //     participantTracks = localTracks;
+    //     participantDetails = conference.getLocalUser();
+    // }
     const videoTrack = participantTracks?.find(track => track.getVideoType() === "camera");
     const constraints = {
         "lastN": 25,
@@ -145,17 +156,17 @@ const CompositeLayout = () => {
         }
     }
 
-    if (isPresenter)  {
-        const desktopTrack = participantTracks?.find(track => track.getVideoType() === "desktop");
-        constraints["onStageSources"] = [desktopTrack?.getSourceName()];
-        constraints["selectedSources"] = [desktopTrack?.getSourceName()];
-        constraints["constraints"] = { [desktopTrack?.getSourceName()]: { "maxHeight": 2160 }};
-    }
+    // if (isPresenter)  {
+    //     const desktopTrack = participantTracks?.find(track => track.getVideoType() === "desktop");
+    //     constraints["onStageSources"] = [desktopTrack?.getSourceName()];
+    //     constraints["selectedSources"] = [desktopTrack?.getSourceName()];
+    //     constraints["constraints"] = { [desktopTrack?.getSourceName()]: { "maxHeight": 2160 }};
+    // }
 
     conference.setReceiverConstraints(constraints);
-    const activeClasses = classNames(classes.root, {
-        'fullmode': layout.mode === ENTER_FULL_SCREEN_MODE
-    });    
+    // const activeClasses = classNames(classes.root, {
+    //     'fullmode': layout.mode === ENTER_FULL_SCREEN_MODE
+    // });    
 
   const [videos, setVideos] = useState([]); // List of video objects
   const [defaultVideo, setDefaultVideo] = useState(null);
@@ -198,8 +209,13 @@ const CompositeLayout = () => {
         }
         fetchData();
       }, []);
+      console.log('participantTracks', participantTracks, participantTracks?.length);
+
       
+      console.log('total tracks', largeVideoId, recorderId, tracks, remoteTracks, localTracks, conference.myUserId());
   return (
+    <>{
+      conference.myUserId() === recorderId ?
     <Box
       onMouseEnter={() => setShowToggleButton(true)}
       onMouseLeave={() => setShowToggleButton(false)}
@@ -216,6 +232,7 @@ const CompositeLayout = () => {
               participantDetails={participantDetails}
               participantTracks={participantTracks}
               localUserId={conference.myUserId()}
+              largeVideoId={largeVideoId}
             />
       {/* <button id="button" style={{color: 'red', zIndex: 1}} onClick={handleUnmute}>click here</button> */}
     
@@ -249,7 +266,11 @@ const CompositeLayout = () => {
           <KeyboardDoubleArrowDownIcon />
         </button>
       )}
-    </Box>
+    </Box> 
+    :
+    <div>Recorder</div>
+    }
+    </>
   )
 }
 

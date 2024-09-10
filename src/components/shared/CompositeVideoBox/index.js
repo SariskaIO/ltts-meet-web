@@ -33,7 +33,8 @@ const CompositeVideoBox = ({
   isFilmstrip,
   isLargeVideo,
   isTranscription,
-  numParticipants
+  numParticipants,
+  largeVideoId
 }) => {
     
   const useStyles = makeStyles((theme) => ({
@@ -162,26 +163,12 @@ const CompositeVideoBox = ({
     },
   }));
   const classes = useStyles();
-  const { pinnedParticipant, raisedHandParticipantIds } = useSelector(
-    (state) => state.layout
-  );
-  let videoTrack = isPresenter
-    ? participantTracks?.find((track) => track?.getVideoType() === "desktop")
-    : participantTracks?.find((track) => track?.getType() === "video");
-  if (isLargeVideo && pinnedParticipant.isPresenter === false) {
-    videoTrack = participantTracks?.find(
-      (track) => track.getType() === "video"
-    );
-  }
+  let videoTrack = participantTracks?.find((track) => track?.getType() === "video");
   
   const audioTrack = participantTracks?.find((track) => track?.isAudioTrack());
-  const audioIndicator = useSelector((state) => state.audioIndicator);
   const dispatch = useDispatch();
-  const [visiblePinParticipant, setVisiblePinPartcipant] = useState(true);
-  const subtitle = useSelector((state) => state.subtitle);
-  const conference = useSelector((state) => state.conference);
   const { documentWidth, documentHeight } = useDocumentSize();
-
+console.log('audioTrack', audioTrack, videoTrack, participantTracks)
   const togglePinParticipant = () => {
     dispatch(setPinParticipant(participantDetails?.id, isPresenter));
   };
@@ -217,23 +204,6 @@ const CompositeVideoBox = ({
       <Box className={classnames(classes.audioBox, { audioBox: true })}>
         {!audioTrack?.isLocal() && <Audio track={audioTrack} />}
       </Box>
-      {videoTrack?.isMuted() ? (
-        <Box className={avatarActiveClasses}>
-          <Avatar
-            src={null}
-            style={
-              isFilmstrip
-                ? {
-                    background: avatarColor,
-                  }
-                : { background: avatarColor }
-            }
-            className={audioIndicatorActiveClasses}
-          >
-            {participantDetails?.name?.slice(0, 1)?.toUpperCase()}
-          </Avatar>
-        </Box>
-      ) : (
         <Box
           style={{
             width: getVideoContainerWidth(videoStreamHeight),
@@ -243,9 +213,8 @@ const CompositeVideoBox = ({
           }}
           className={classes.videoWrapper}
         >
-          <Video isPresenter={isPresenter} track={videoTrack} />
+          <Video track={videoTrack} largeVideoId={largeVideoId}/>
         </Box>
-      )}
     </Box>
   );
 };

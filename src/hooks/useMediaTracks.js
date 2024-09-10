@@ -24,6 +24,7 @@ export const useMediaTracks = (streamUrl, setLocalTracks, iAmRecorder, localTrac
  function createLocalTracksFromHLS(hlsUrl) {
   return new Promise((resolve, reject) => {
       if (!hlsUrl || typeof hlsUrl !== 'string' || !hlsUrl.trim()) {
+        console.log("!hlsUrl || typeof hlsUrl !== 'string' || !hlsUrl.trim()");
           reject(new SariskaMediaTransport.JitsiTrackError(
               SariskaMediaTransport.JitsiTrackErrors.TRACK_INVALID_PARAMETERS, 'Invalid HLS URL'));
           return;
@@ -54,9 +55,13 @@ export const useMediaTracks = (streamUrl, setLocalTracks, iAmRecorder, localTrac
                   sourceType: 'hls'
               }
           ].filter(info => info.track); // Only include tracks that exist
-
-          const t = SariskaMediaTransport.createLocalTracksFromMediaStreams(tracksInfo)
+          try {
+            const t = SariskaMediaTransport.createLocalTracksFromMediaStreams(tracksInfo)
           resolve(t)
+          } catch (error) {
+            console.log('error in creating track', error)
+          }
+          
 
       };
 
@@ -66,30 +71,38 @@ export const useMediaTracks = (streamUrl, setLocalTracks, iAmRecorder, localTrac
           hls.attachMedia(videoElement);
 
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            console.log('MANIFEST_PARSED')
               videoElement.play().catch(e => console.error("Error playing HLS stream", e));
           });
 
           videoElement.onloadedmetadata = () => {
+            console.log('onloadedmetadata');
               canvas.width = videoElement.videoWidth;
               canvas.height = videoElement.videoHeight;
 
               const canvasStream = canvas.captureStream(30); // 30 FPS
               const videoTrack = canvasStream.getVideoTracks()[0];
               const audioTrack = videoElement.captureStream().getAudioTracks()[0];
-
+            console.log('videoTrack', videoTrack, audioTrack)
               function drawVideoFrame() {
                   if (!videoElement.paused && !videoElement.ended) {
+                    console.log('drawVideoFrame');
                       ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
                       requestAnimationFrame(drawVideoFrame);
                   }
               }
-
-              drawVideoFrame();
+              try {
+                drawVideoFrame();
 
               createTracks(videoTrack, audioTrack);
+              } catch (error) {
+                console.log('drawVideoFrame creeate', error);
+              }
+              
           };
 
           hls.on(Hls.Events.ERROR, (event, data) => {
+            console.log('Hls.Events.ERROR', data);
               if (data.fatal) {
                   reject(new SariskaMediaTransport.JitsiTrackError(
                       SariskaMediaTransport.JitsiTrackErrors.TRACK_NO_STREAM_FOUND, new Error("Fatal HLS error")));
@@ -97,6 +110,7 @@ export const useMediaTracks = (streamUrl, setLocalTracks, iAmRecorder, localTrac
               }
           });
       } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+        console.log("videoElement.canPlayType('application/vnd.apple.mpegurl')")
           // For Safari
           videoElement.src = hlsUrl;
           videoElement.onloadedmetadata = () => {
@@ -115,7 +129,7 @@ export const useMediaTracks = (streamUrl, setLocalTracks, iAmRecorder, localTrac
               }
 
               drawVideoFrame();
-
+              
               videoElement.play()
                   .then(() => createTracks(videoTrack, audioTrack))
                   .catch(e => {
