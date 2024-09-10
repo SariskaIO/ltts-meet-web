@@ -1,5 +1,5 @@
 {
-  "name": "demo-kit",
+  "name": "ltts-meet-web",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -10,6 +10,7 @@
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
     "@microsoft/microsoft-graph-client": "^3.0.0",
+    "@mui/icons-material": "^6.0.2",
     "@mui/material": "^5.4.1",
     "@sentry/react": "^6.17.9",
     "@sentry/tracing": "^6.17.9",
@@ -22,6 +23,7 @@
     "compressorjs": "^1.1.1",
     "dropbox": "^10.7.0",
     "env-cmd": "^10.1.0",
+    "hls.js": "1.5.15",
     "linkify-html": "^3.0.5",
     "linkifyjs": "^3.0.5",
     "react": "17.0.2",
@@ -33,7 +35,6 @@
     "redux": "^4.1.0",
     "redux-promise": "^0.6.0",
     "redux-thunk": "^2.3.0",
-    "sariska-collaborative-annotation-sdk": "https://github.com/SariskaIO/sariska-collaborative-annotation-sdk#production",
     "sariska-media-transport": "https://github.com/SariskaIO/sariska-media-transport.git#5.0.12",
     "source-map-explorer": "^2.5.2",
     "web-vitals": "^1.0.1",
@@ -47,10 +48,21 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": ["react-app", "react-app/jest"]
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

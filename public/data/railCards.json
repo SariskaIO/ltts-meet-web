@@ -1,0 +1,32 @@
+[
+    {
+      "id": "1",
+      "title": "Aaj Tak",
+      "url": "http://playertest.longtailvideo.com/adaptive/wowzaid3/playlist.m3u8",
+      "showtitle":"Special Programme"
+    },
+    {
+      "id": "2",
+      "title": "Zee News",
+      "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8",
+      "showtitle":"Zee Programme"
+    },
+    {
+        "id": "3",
+        "title": "ABP Live",
+        "url": "https://abplivetv.akamaized.net/hls/live/2043010/hindi/master.m3u8",
+        "showtitle":"Celebrating Zakir Hussain"
+      },
+      {
+        "id": "4",
+        "title": "Good News Today",
+        "url": "https://d1g8wgjurz8via.cloudfront.net/bpk-tv/Andtvhd1/default/andtvhd1.m3u8",
+        "showtitle":"Good Luck Special"
+      },
+      {
+        "id": "5",
+        "title": "Zee Business",
+        "url": "http://content.jwplatform.com/manifests/vM7nH0Kl.m3u8",
+        "showtitle":"Baat Duniyaki"
+      }
+  ]

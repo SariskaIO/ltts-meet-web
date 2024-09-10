@@ -3,13 +3,13 @@ import React, { useRef, useLayoutEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import PersonOutlinedIcon from '@material-ui/icons/PersonOutlined';
 import { color } from "../../../assets/styles/_color";
-import { useDocumentSize } from "../../../hooks/useDocumentSize";
 import VideoBox from "../../shared/VideoBox";
 import Logo from "../../shared/Logo";
+import { useDocumentSize } from "../../../hooks/useDocumentSize";
 
 const JoinTrack = ({ tracks, name }) => {
   const videoTrack = tracks.find((track) => track && track.isVideoTrack());
-  const {documentHeight, documentWidth} = useDocumentSize();
+  const {documentWidth, documentHeight} = useDocumentSize()
   const bgColor = useSelector(state=>state.profile?.color);
 
   const useStyles = makeStyles((theme) => ({
@@ -83,7 +83,10 @@ const JoinTrack = ({ tracks, name }) => {
   }));
 
   const classes = useStyles();
-
+  if(!(tracks && tracks?.length)){
+    return null;
+  }
+  
   return (
     <div
       className={classes.localStream}

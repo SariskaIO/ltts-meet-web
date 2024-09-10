@@ -1,11 +1,8 @@
 import {
-  Badge,
   Box,
   Button,
-  Drawer,
   Hidden,
   makeStyles,
-  Tooltip,
   Typography,
 } from "@material-ui/core";
 import React, { useEffect, useRef, useState } from "react";
@@ -13,38 +10,13 @@ import SariskaMediaTransport from "sariska-media-transport";
 import { color } from "../../../assets/styles/_color";
 import { useHistory } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import classnames from "classnames";
 import CallEndIcon from "@material-ui/icons/CallEnd";
-import ColorLensIcon from '@material-ui/icons/ColorLens';
-import GestureIcon from '@material-ui/icons/Gesture';
-import SentimentSatisfiedOutlinedIcon from '@material-ui/icons/SentimentSatisfiedOutlined';
-import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
-import RadioButtonUncheckedOutlinedIcon from '@material-ui/icons/RadioButtonUncheckedOutlined';
-import TextFieldsIcon from '@material-ui/icons/TextFields';
-import LayersClearIcon from '@material-ui/icons/LayersClear';
-import MicIcon from "@material-ui/icons/Mic";
-import MicOffIcon from "@material-ui/icons/MicOff";
-import VideocamIcon from "@material-ui/icons/Videocam";
-import VideocamOffIcon from "@material-ui/icons/VideocamOff";
-import ScreenShareIcon from "@material-ui/icons/ScreenShare";
-import StopScreenShareIcon from '@material-ui/icons/StopScreenShare';
-import PanToolIcon from "@material-ui/icons/PanTool";
-import GroupIcon from "@material-ui/icons/Group";
-import ChatIcon from "@material-ui/icons/Chat";
-import ViewListIcon from "@material-ui/icons/ViewList";
-import ViewComfyIcon from "@material-ui/icons/ViewComfy";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import CloseIcon from '@material-ui/icons/Close';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import {
-  addLocalTrack,
-  localTrackMutedChanged,
-  removeLocalTrack,
-} from "../../../store/actions/track";
-import {
   ENTER_FULL_SCREEN_MODE,
   EXIT_FULL_SCREEN_MODE,
-  GRID,
   PRESENTATION,
   SHARED_DOCUMENT,
   SPEAKER,
@@ -53,53 +25,29 @@ import {
   GET_PRESENTATION_STATUS,
   RECEIVED_PRESENTATION_STATUS,
   streamingMode,
-  PARTICIPANTS_LOCAL_PROPERTIES,
-  ANNOTATION_TOOLS,
+  STREAMING_FLAGS,
 } from "../../../constants";
 import {
   setFullScreen,
   setLayout,
-  setPresenter,
   setPresentationtType,
 } from "../../../store/actions/layout";
 import { clearAllReducers } from "../../../store/actions/conference";
 import {
   exitFullscreen,
-  formatAMPM,
-  getModerator,
-  getRandomColor,
   isFullscreen,
-  isModerator,
-  isModeratorLocal,
   requestFullscreen,
   startStreamingInSRSMode,
   stopStreamingInSRSMode,
 } from "../../../utils";
-import classNames from "classnames";
-import ParticipantDetails from "../../shared/ParticipantDetails";
-import { unreadMessage } from "../../../store/actions/chat";
-import { withStyles } from "@material-ui/styles";
-import ChatPanel from "../../shared/Chat";
 import MoreAction from "../../shared/MoreAction";
 import DrawerBox from "../../shared/DrawerBox";
-import { addSubtitle } from "../../../store/actions/subtitle";
 import { showSnackbar } from "../../../store/actions/snackbar";
 import StyledTooltip from "../../shared/StyledTooltip";
 import LiveStreamingDetails from "../../shared/LiveStreamingDetails";
 import { showNotification } from "../../../store/actions/notification";
 import googleApi from "../../../utils/google-apis";
 import LiveStreamDialog from "../../shared/LiveStreamDialog";
-import { SET_ANNOTATION_FEATURE, SET_ANNOTATION_STYLE } from "../../../store/actions/types";
-import { addAnnotationFeature, clearAllAnnotation, removeAnnotationFeature, setAnnotator, updateAnnotationStyle } from "../../../store/actions/annotation";
-import { enableParticipantMedia } from "../../../store/actions/media";
-
-const StyledBadge = withStyles((theme) => ({
-  badge: {
-    background: color.primary,
-    top: 6,
-    right: 10,
-  },
-}))(Badge);
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -286,268 +234,32 @@ const useStyles = makeStyles((theme) => ({
 
 const ActionButtons = ({ dominantSpeakerId }) => {
   const history = useHistory();
-  const audioTrack = useSelector((state) => state.localTrack).find((track) =>
-    track.isAudioTrack()
-  );
-  const videoTrack = useSelector((state) => state.localTrack).find((track) =>
-    track.isVideoTrack()
-  );
   const classes = useStyles();
   const dispatch = useDispatch();
   const conference = useSelector((state) => state.conference);
-  const myUserId = conference.myUserId()
-  const localTracks = useSelector((state) => state.localTrack);
-  const [presenting, setPresenting] = useState(false);
-  const [time, setTime] = useState(formatAMPM(new Date()));
   const profile = useSelector((state) => state.profile);
-  const layout = useSelector((state) => state.layout);
-  const annotation = useSelector((state) => state.annotation);
-  const unread = useSelector((state) => state.chat.unreadMessage);
-  const enabledMediaParticipantIds = useSelector(state => state.media?.enabledMediaParticipantIds);
-  const [isRequestingUnmute, setIsRequestingUnmute] = useState(false);
-  const [raiseHand, setRaiseHand] = useState(false);
-  const [annotatingColor, setAnnotatingColor] = useState('#fff');
-  const [isParticipantMediaEnabled, setIsParticipantMediaEnabled] = useState({
-    audio: false,
-    video: false
-  })
   const [featureStates, setFeatureStates] = useState({});
-  const [chatState, setChatState] = React.useState({
-    right: false,
-  });
   const [liveState, setLiveState] = React.useState({
-    right: false,
-  });
-  const [participantState, setParticipantState] = React.useState({
     right: false,
   });
   const [moreActionState, setMoreActionState] = React.useState({
     right: false,
   });
-  const { feature } = useSelector(state => state.annotation);
+
   const [openLivestreamDialog, setOpenLivestreamDialog] = useState(false);
   const [broadcasts, setBroadcasts] = useState([]);
   const [streamingUrls, setStreamingUrls] = useState([]);
   const [streamKey, setStreamKey] = useState('');
+  const [isLowLatencyUrl, setIsLowLatencyUrl] = useState(false);
 
-  const skipResize = false;
   const streamingSession = useRef(null);
-  
+
   const action = (actionData) => {
     featureStates[actionData.key] = actionData.value;
     setFeatureStates({ ...featureStates });
   };
-  
-  const muteMedia = async(type) => {
-    if(type === 'audio'){
-      await audioTrack?.mute();
-    }
-    if(type === 'video'){
-      await videoTrack?.mute();
-    }
-    dispatch(localTrackMutedChanged());
-  }
 
-  const unmuteMedia = async (type) => {
-    if(!isModerator(conference)) {
-      dispatch(
-        showNotification({
-          severity: "info",
-          autoHide: true,
-          message: `Asking to enable ${type}!`,
-        })
-      );
-      conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ENABLE_MEDIA, type);
-     // setIsRequestingUnmute(true);
-      conference.sendCommand('request-media-unmute', { value: type })
-      conference.removeCommand('request-media-unmute');
-    }else{
-      if(type === 'audio'){
-        await audioTrack?.unmute();
-      }
-      if(type === 'video'){
-        await videoTrack?.unmute();
-      }
-      dispatch(localTrackMutedChanged());
-    }
-  };
-
-  const removeLocalParticipantProperties = () => {
-    conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION, "stop");
-    conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL, "");
-  }
-
-  const updateColor = () => {
-    if(!isModerator(conference)) {
-      return dispatch(
-        showNotification({
-          severity: "error",
-          autoHide: true,
-          message: "You are not moderator!!",
-        })
-      );
-    };
-    let randomColor = getRandomColor();
-    setAnnotatingColor(randomColor);
-    dispatch(
-      showNotification({
-        severity: "info",
-        autoHide: true,
-        message: `Color of Annotation changed to ${randomColor}`,
-      })
-    );
-    if(annotation.feature === ANNOTATION_TOOLS.pen){
-      dispatch(updateAnnotationStyle(SET_ANNOTATION_STYLE, randomColor));
-    }else{
-     // removeLocalParticipantProperties();
-      dispatch(updateAnnotationStyle(SET_ANNOTATION_STYLE, randomColor));
-    }
-  }
-
-  const startAnnotation = (tool) => {
-    if(!isModerator(conference)) {
-      return dispatch(
-        showNotification({
-          severity: "error",
-          autoHide: true,
-          message: "You are not moderator!!",
-        })
-      );
-    };
-      dispatch(
-        showNotification({
-          severity: "info",
-          autoHide: true,
-          message: `Successfully selected the ${tool.toLowerCase()}`,
-        })
-      );
-
-    dispatch(addAnnotationFeature(SET_ANNOTATION_FEATURE, tool));
-    dispatch(setAnnotator({ participantId: myUserId, annotator: true, annotationTool: tool}));
-    conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION, "start");
-    conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.ANNOTATION_TOOL, tool);
-  }
-
-  const notifyStatus = (tool) => {
-    if(!isModerator(conference)) {
-      return dispatch(
-        showNotification({
-          severity: "error",
-          autoHide: true,
-          message: "You are not moderator!!",
-        })
-      );
-    }else{
-      return dispatch(
-        showNotification({
-          severity: "error",
-          autoHide: true,
-          message: `Already selected the ${tool.toLowerCase()}!`,
-        })
-      );
-    }
-  }
-  const stopAnnotation = () => {
-    if(!isModeratorLocal(conference)) {
-      return dispatch(
-        showNotification({
-          severity: "error",
-          autoHide: true,
-          message: "You are not moderator!!",
-        })
-      );
-    };
-    dispatch(
-      showNotification({
-        severity: "info",
-        autoHide: true,
-        message: `Successfully stopped the annotation`,
-      })
-    );
-    dispatch(removeAnnotationFeature(SET_ANNOTATION_FEATURE));
-    dispatch(setAnnotator({ participantId: myUserId, annotator: false, annotationTool: '' }));
-    removeLocalParticipantProperties()
-  }
-  
-  const handleClearAllAnnotation = () => {
-    if(!isModerator(conference)) {
-      return dispatch(
-        showNotification({
-          severity: "error",
-          autoHide: true,
-          message: "You are not moderator!!",
-        })
-      );
-    };
-    dispatch(
-      showNotification({
-        severity: "info",
-        autoHide: true,
-        message: `Successfully cleared the annotation`,
-      })
-    );
-    dispatch(clearAllAnnotation(SET_ANNOTATION_FEATURE, myUserId));
-    dispatch(setAnnotator({ participantId: myUserId, annotator: false, annotationTool: '' }));
-    removeLocalParticipantProperties();
-   // setTimeout(()=>setAnnotationTool(''), 1000);
-  }
-
-  const shareScreen = async () => {
-    let desktopTrack;
-    try {
-      const tracks = await SariskaMediaTransport.createLocalTracks({
-        resolution: 720,
-        devices: ["desktop"],
-      });
-      desktopTrack = tracks.find((track) => track.videoType === "desktop");
-    } catch (e) {
-      dispatch(
-        showSnackbar({
-          autoHide: true,
-          message:
-            "Oops, Something wrong with screen sharing permissions. Try reload",
-        })
-      );
-      return;
-    }
-    await conference.addTrack(desktopTrack);
-    desktopTrack.addEventListener(
-      SariskaMediaTransport.events.track.LOCAL_TRACK_STOPPED,
-      async () => {
-        stopPresenting();
-      }
-    );
-    conference.setLocalParticipantProperty("presenting", "start");
-    dispatch(addLocalTrack(desktopTrack));
-    dispatch(
-      setPresenter({ participantId: conference.myUserId(), presenter: true })
-    );
-    setPresenting(true);
-  };
-
-  const stopPresenting = async () => {
-    const desktopTrack = localTracks.find(
-      (track) => track.videoType === "desktop"
-    );
-    await conference.removeTrack(desktopTrack);
-    dispatch(
-      setPresenter({ participantId: conference.myUserId(), presenter: false })
-    );
-    dispatch(removeLocalTrack(desktopTrack));
-    conference.setLocalParticipantProperty("presenting", "stop");
-    setPresenting(false);
-  };
-
-  const startRaiseHand = () => {
-    conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.HANDRAISE, "start");
-    setRaiseHand(true);
-  };
-
-  const stopRaiseHand = () => {
-    conference.setLocalParticipantProperty(PARTICIPANTS_LOCAL_PROPERTIES.HANDRAISE, "stop");
-    setRaiseHand(false);
-  };
-
+  console.log('stream key', streamKey, streamingUrls)
   const startStreaming = async () => {
     if (featureStates.streaming) {
       return;
@@ -636,11 +348,17 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           action({ key: "streaming", value: true }); 
        }
     }else{
-      const session = await conference.startRecording({
-        mode: SariskaMediaTransport.constants.recording.mode.STREAM,
-        streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
-      });
-      streamingSession.current = session;
+      const streamingResponse = await startStreamingInSRSMode(null, null, STREAMING_FLAGS);
+         if(streamingResponse.started){
+          const session = await conference.startRecording({
+            mode: SariskaMediaTransport.constants.recording.mode.STREAM,
+            streamId: streamingResponse.rtmp_ingest_url,
+          //  streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
+          });
+          setIsLowLatencyUrl(true);
+          setStreamingUrls(streamingResponse)
+          streamingSession.current = session;
+        } 
     }
     setOpenLivestreamDialog(false);
   };
@@ -671,11 +389,17 @@ const ActionButtons = ({ dominantSpeakerId }) => {
       selectedStream.result.items[0]?.cdn?.ingestionInfo?.streamName;
     setOpenLivestreamDialog(false);
 
-      const session = await conference.startRecording({
-        mode: SariskaMediaTransport.constants.recording.mode.STREAM,
-        streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
-      });
-      streamingSession.current = session;
+    const streamingResponse = await startStreamingInSRSMode(null, null, STREAMING_FLAGS);
+       if(streamingResponse.started){
+        const session = await conference.startRecording({
+          mode: SariskaMediaTransport.constants.recording.mode.STREAM,
+          streamId: streamingResponse.rtmp_ingest_url,
+        //  streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
+        });
+        setIsLowLatencyUrl(true);
+        setStreamingUrls(streamingResponse)
+        streamingSession.current = session;
+       } 
   };
 
   const stopStreaming = async () => {
@@ -702,6 +426,11 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           action({ key: "streaming", value: false });
       }
     }else{
+      const streamingResponse = await stopStreamingInSRSMode(profile.meetingTitle);
+       if(!streamingResponse.started){
+         setIsLowLatencyUrl(false);
+         setStreamingUrls({});
+       }
       await conference.stopRecording(
         localStorage.getItem("streaming_session_id")
       );
@@ -721,15 +450,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     }
     setLiveState({ ...liveState, [anchor]: open });
   };
-  const toggleParticipantDrawer = (anchor, open) => (event) => {
-    if (
-      event.type === "keydown" &&
-      (event.key === "Tab" || event.key === "Shift")
-    ) {
-      return;
-    }
-    setParticipantState({ ...participantState, [anchor]: open });
-  };
 
   const handleStreamKeyChange=(e)=>{
     setStreamKey(e.target.value);
@@ -745,46 +465,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           <CloseIcon onClick={toggleLiveDrawer("right", false)}/>
         </Hidden>
       </Box>
-      <LiveStreamingDetails streamingUrls={streamingUrls} featureStates={featureStates} stopStreaming={stopStreaming} startStreaming={startStreaming} handleStreamKeyChange={handleStreamKeyChange} streamKey={streamKey}/>
-    </>
-  );
-
-  const participantList = (anchor) => (
-    <>
-      <Box className={classes.participantHeader}>
-        <Typography variant="h6" className={classes.title}>
-          Participants
-        </Typography>
-        <Hidden mdUp>
-          <CloseIcon onClick={toggleParticipantDrawer("right", false)}/>
-        </Hidden>
-      </Box>
-      <ParticipantDetails />
-    </>
-  );
-
-  const toggleChatDrawer = (anchor, open) => (event) => {
-    if (
-      event.type === "keydown" &&
-      (event.key === "Tab" || event.key === "Shift")
-    ) {
-      return;
-    }
-    setChatState({ ...chatState, [anchor]: open });
-    dispatch(unreadMessage(0));
-  };
-
-  const chatList = (anchor) => (
-    <>
-      <Box className={classes.participantHeader}>
-        <Typography variant="h6" className={classes.title}>
-          Messages
-        </Typography>
-        <Hidden mdUp>
-          <CloseIcon onClick={toggleChatDrawer("right", false)}/>
-        </Hidden>
-      </Box>
-      <ChatPanel />
+      <LiveStreamingDetails streamingUrls={streamingUrls} featureStates={featureStates} stopStreaming={stopStreaming} startStreaming={startStreaming} handleStreamKeyChange={handleStreamKeyChange} streamKey={streamKey} isLowLatencyUrl={isLowLatencyUrl}/>
     </>
   );
 
@@ -818,27 +499,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     document.removeEventListener("MSFullscreenChange", AddFShandler);
   };
 
-  const resize = () => {
-    if (skipResize) {
-      return;
-    }
-    if (window.innerHeight == window.screen.height) {
-      dispatch(setFullScreen(ENTER_FULL_SCREEN_MODE));
-    } else {
-      dispatch(setFullScreen(EXIT_FULL_SCREEN_MODE));
-    }
-  };
-
-  const toggleView = () => {
-    if (layout.type === PRESENTATION || layout.type === SPEAKER) {
-      dispatch(setLayout(GRID));
-    } else if (featureStates.whiteboard || featureStates.sharedDocument) {
-      dispatch(setLayout(PRESENTATION));
-    } else {
-      dispatch(setLayout(SPEAKER));
-    }
-  };
-
   const toggleMoreActionDrawer = (anchor, open) => (event) => {
     if (
       event.type === "keydown" &&
@@ -857,11 +517,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         featureStates={featureStates}
         setLayoutAndFeature={setLayoutAndFeature}
         onClick={toggleMoreActionDrawer("right", false)}
-        participantOnClick = {toggleParticipantDrawer("right", true)}
-        participantTitle = "Participants Details"
-        chatOnClick = {toggleChatDrawer("right", true)}
-        chatTitle="Chat Box"
-        layoutOnClick = {toggleView}
       />
     </>
   );
@@ -873,24 +528,11 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   };
 
   useEffect(() => {
-    // let doit;
-    // document.documentElement.addEventListener('mouseleave', () => skipResize = false);
-    // document.documentElement.addEventListener('mouseenter', () => skipResize = true)
-
-    const interval = setInterval(() => {
-      setTime(formatAMPM(new Date()));
-    }, 1000);
     document.addEventListener("dblclick", toggleFullscreen);
-    // window.addEventListener("resize", ()=> {
-    //   clearTimeout(doit);
-    //   doit = setTimeout(resize, 250);
-    // });
     addFullscreenListeners();
     return () => {
       document.removeEventListener("dblclick", toggleFullscreen);
-      clearInterval(interval);
       removeFullscreenListeners();
-      // window.removeEventListener("resize", resize);
     };
   }, []);
 
@@ -899,7 +541,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
       setTimeout(
         () =>
           conference.sendEndpointMessage(
-            conference.getParticipantsWithoutHidden()[0]?._id,
+            conference.getParticipantsWithoutHidden()[0]._id,
             { action: GET_PRESENTATION_STATUS }
           ),
         1000
@@ -1010,28 +652,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     );
 
     conference.addEventListener(
-      SariskaMediaTransport.events.conference.TRANSCRIPTION_STATUS_CHANGED,
-      (status) => {
-        if (status === "ON") {
-          conference.setLocalParticipantProperty("transcribing", true);
-          dispatch(
-            showSnackbar({ autoHide: true, message: "Caption started" })
-          );
-          action({ key: "caption", value: true });
-        }
-
-        if (status === "OFF") {
-          conference.removeLocalParticipantProperty("transcribing");
-          dispatch(
-            showSnackbar({ autoHide: true, message: "Caption stopped" })
-          );
-          dispatch(addSubtitle({}));
-          action({ key: "caption", value: false });
-        }
-      }
-    );
-
-    conference.addEventListener(
       SariskaMediaTransport.events.conference.RECORDER_STATE_CHANGED,
       (data) => {
           if (streamingMode !== 'srs' && data._statusFromJicofo === "on" && data._mode === "stream") {
@@ -1098,31 +718,27 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     history.push("/leave");
   };
   
-  const isModeratorFlag = conference && isModerator(conference);
-  let disabledIconStyle = { opacity: isModeratorFlag ? 1 : 0.5}
   return (
     <Box id="footer" className={classes.root}>
-
-{/* <Button onClick={handleColor} style={{color: lineColor, zIndex: 999}}>Color</Button>
-        <Button onClick={handleClearCanvas} style={{color: lineColor, zIndex: 999}}>Clear</Button> */}
-      <Hidden smDown>
+      {/* <Hidden smDown>
         <Box className={classes.infoContainer}>
           <Box>{time}</Box>
           <Box className={classes.separator}>|</Box>
           <Box>{profile.meetingTitle}</Box>
         </Box>
-      </Hidden>
+      </Hidden> */}
       <Hidden smDown>
-        <Box sx={{display: 'flex'}}>
-        <StyledTooltip title="Leave Call">
-          <CallEndIcon onClick={leaveConference} className={classes.end} />
-        </StyledTooltip>
+        <Box sx={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
         <StyledTooltip title={"Go Live"}>
           <Box className={classes.liveBox} onClick={toggleLiveDrawer("right", true)} >          
             <FiberManualRecordIcon className={classes.dot} />
-            <Button className={classes.live}>{"Go Live"}</Button>
+            <Button className={classes.live}>{"Live"}</Button>
           </Box>
         </StyledTooltip>
+        {/* <StyledTooltip title="Leave Call">
+          <CallEndIcon onClick={leaveConference} className={classes.end} />
+        </StyledTooltip> */}
+        
         </Box>
         <DrawerBox
           open={liveState["right"]}
@@ -1139,90 +755,32 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         selectedBroadcast={selectedBroadcast}
       />
       <Box className={classes.permissions}>
-      <StyledTooltip
-          title={"Change Color"}
-        >
-          <ColorLensIcon onClick={updateColor} 
-            style={{fill: annotatingColor, opacity: isModeratorFlag ? 1 : 0.5}} />
-        </StyledTooltip>
-      <StyledTooltip
-          title={"Pen"}
-        >
-          <div>
-          {feature === ANNOTATION_TOOLS.pen ? (
-              <GestureIcon onClick={() => notifyStatus(ANNOTATION_TOOLS.pen)} className={classes.active} style={disabledIconStyle} />
-            ) : (
-              <GestureIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.pen)} style={disabledIconStyle} />
-            )
-          }
-          </div>
-        </StyledTooltip>
-        <StyledTooltip
-          title={"Emoji"}
-        >
-          {feature === ANNOTATION_TOOLS.emoji ? (
-              <SentimentSatisfiedOutlinedIcon onClick={() => notifyStatus(ANNOTATION_TOOLS.emoji)} className={classes.active} style={disabledIconStyle}  />
-            ) : (
-              <SentimentSatisfiedOutlinedIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.emoji)} style={disabledIconStyle} />
-            )
-          }
-        </StyledTooltip>
-        <StyledTooltip
-          title={"Circle"}
-        >
-          {feature === ANNOTATION_TOOLS.circle ? (
-              <RadioButtonUncheckedOutlinedIcon onClick={() => notifyStatus(ANNOTATION_TOOLS.circle)} className={classes.active} style={disabledIconStyle}  />
-            ) : (
-              <RadioButtonUncheckedOutlinedIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.circle)} style={disabledIconStyle} />
-            )
-          }
-        </StyledTooltip>
-        <StyledTooltip
-          title={"Text Box"}
-        >
-          <div>
-          {feature === ANNOTATION_TOOLS.textbox ? (
-              <TextFieldsIcon onClick={() => notifyStatus(ANNOTATION_TOOLS.textbox)} className={classes.active} style={disabledIconStyle}  />
-            ) : (
-              <TextFieldsIcon onClick={() => startAnnotation(ANNOTATION_TOOLS.textbox)} style={disabledIconStyle} />
-            )
-          }
-          </div>
-        </StyledTooltip>
-        <StyledTooltip
-          title={"Clear Annotation"}
-        >
-          <LayersClearIcon onClick={handleClearAllAnnotation} style={disabledIconStyle} />
-        </StyledTooltip>
-        <StyledTooltip
+        {/* <StyledTooltip
           title={
-            isModeratorFlag ?
             audioTrack
               ? audioTrack?.isMuted()
                 ? "Unmute Audio"
                 : "Mute Audio"
               : "Check the mic or Speaker"
-            :
-            "Request to unmute Audio"
           }
         >
           {audioTrack ? (
             audioTrack?.isMuted() ? (
-              <MicOffIcon onClick={() => unmuteMedia('audio')} className={classes.active} />
+              <MicOffIcon onClick={unmuteAudio} className={classes.active} />
             ) : (
-              <MicIcon onClick={() => muteMedia('audio')} />
+              <MicIcon onClick={muteAudio} />
             )
           ) : (
-            <MicIcon onClick={() => muteMedia('audio')} style={{ cursor: "unset" }} />
+            <MicIcon onClick={muteAudio} style={{ cursor: "unset" }} />
           )}
         </StyledTooltip>
         <StyledTooltip
-          title={isModeratorFlag ? videoTrack?.isMuted() ? "Unmute Video" : "Mute Video" : "Request to unmute Video"}
+          title={videoTrack?.isMuted() ? "Unmute Video" : "Mute Video"}
         >
           {videoTrack?.isMuted() ? (
-            <VideocamOffIcon onClick={() => unmuteMedia('video')} className={classes.active} />
+            <VideocamOffIcon onClick={unmuteVideo} className={classes.active} />
           ) : (
-            <VideocamIcon onClick={() => muteMedia('video')} />
+            <VideocamIcon onClick={muteVideo} />
           )}
         </StyledTooltip>
         <StyledTooltip title={presenting ? "Stop Presenting" : "Share Screen"}>
@@ -1269,12 +827,30 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         >
           {chatList("right")}
         </DrawerBox>
+        <Hidden smDown>
+        <StyledTooltip
+          title={
+            layout.type === SPEAKER || layout.type === PRESENTATION
+              ? "Grid View"
+              : "Speaker View"
+          }
+        >
+          {layout.type === SPEAKER || layout.type === PRESENTATION ? (
+            <ViewListIcon onClick={toggleView} className={classes.subIcon} />
+          ) : (
+            <ViewComfyIcon
+              onClick={toggleView}
+              className={classnames(classes.subIcon, classes.active)}
+            />
+          )}
+        </StyledTooltip>
+        </Hidden>
         <Hidden mdUp>
         <StyledTooltip title="Leave Call">
           <CallEndIcon onClick={leaveConference} className={classes.end} />
         </StyledTooltip>
-      </Hidden>
-        <StyledTooltip title="More Actions">
+      </Hidden>*/}
+        {/* <StyledTooltip title="More Actions">
           <MoreVertIcon
             onClick={toggleMoreActionDrawer("right", true)}
             className={classes.more}
@@ -1285,8 +861,8 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           onClose={toggleMoreActionDrawer("right", false)}
         >
           {moreActionList("right")}
-        </DrawerBox>
-      </Box>
+        </DrawerBox> */}
+      </Box> 
     </Box>
   );
 };

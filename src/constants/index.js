@@ -5,9 +5,12 @@ export const s3 = {
        share: true
     }
 }
-
-export const streamingMode = 'srs' // or 'jibri'
-
+export const STREAMING_FLAGS = {
+    is_direct_ingestion: true,
+       // is_low_latency: true
+}
+export const streamingMode = 'jibri' // or 'srs'
+export const LTTS_API_SERVICE_URL = `${process.env.REACT_APP_LTTS_API_SERVICE_HOST}/api`;
 export const GOOGLE_API_CLIENT_LIBRARY_URL = 'https://apis.google.com/js/api.js';
 export const GOOGLE_API_CLIENT_ID = "621897095595-k7tr68mgfrhm1935cqdq5l2vg8u7ltu8.apps.googleusercontent.com";
 export const API_URL_BROADCAST_STREAMS = 'https://content.googleapis.com/youtube/v3/liveStreams?part=id%2Csnippet%2Ccdn%2Cstatus&id=';
@@ -42,65 +45,6 @@ export const SET_PRESENTATION_TYPE = "SET_PRESENTATION_TYPE";
 export const SHARED_DOCUMENT = "SHARED_DOCUMENT";
 export const WHITEBOARD = "WHITEBOARD";
 
-export const images = [
-    {
-        name: 'Modern living room',
-        thumbnail: `https://meet.sariska.io/static/media/living3_1005ac162f964b5f9e8499dfc5902250.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/living3_1005ac162f964b5f9e8499dfc5902250.jpeg`
-    },
-    {
-        name: 'Ocean in the background',
-        thumbnail: `https://meet.sariska.io/static/media/ocean2_c48fa44e731d22668107a6589ddc33db.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/ocean2_c48fa44e731d22668107a6589ddc33db.jpeg`
-    },
-    {
-        name: 'Confetti on the pink background',
-        thumbnail: `https://meet.sariska.io/static/media/confetti_1296f69171bbef53d30ef80b6f201bf6.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/confetti_1296f69171bbef53d30ef80b6f201bf6.jpeg`
-    },
-    {
-        name: 'Room with books on the shelves',
-        thumbnail: `https://meet.sariska.io/static/media/books2_1a904eb291cb029f74c848d4604c0ed2.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/books2_1a904eb291cb029f74c848d4604c0ed2.jpeg`
-    },
-    {
-        name: 'Trailer in the evevning',
-        thumbnail: `https://meet.sariska.io/static/media/trailer_182d4f7c61e37df010c786dfae0c879f.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/trailer_182d4f7c61e37df010c786dfae0c879f.jpeg`
-    },
-    {
-        name: 'Mountains',
-        thumbnail: `https://meet.sariska.io/static/media/camping_20abb6723b26f70457222e9fd0f4891d.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/camping_20abb6723b26f70457222e9fd0f4891d.jpeg`
-    },
-    {
-        name: 'Skyscrapers with searchlights',
-        thumbnail: `https://meet.sariska.io/static/media/skyskrapers_02f52b6cea18f5f0384b7ac8db8ad86b.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/skyskrapers_02f52b6cea18f5f0384b7ac8db8ad86b.jpeg`
-    },
-    {
-        name: 'Fireworks',
-        thumbnail: `https://meet.sariska.io/static/media/fireworks_c41626c514ccf319a3edb470b4d04949.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/fireworks_c41626c514ccf319a3edb470b4d04949.jpeg`
-    },
-    {
-        name: 'Purple Clouds',
-        thumbnail: `https://meet.sariska.io/static/media/clouds_bf46b8c3a1c02ee8628736254df3b587.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/clouds_bf46b8c3a1c02ee8628736254df3b587.jpeg`
-    },
-    {
-        name: 'Cafe at night',
-        thumbnail: `https://meet.sariska.io/static/media/cafe_at_night_de428ba989b9d616ec90ae7440b0944b.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/cafe_at_night_de428ba989b9d616ec90ae7440b0944b.jpeg`
-    },
-    {
-        name: 'Stylized fish in a green sea',
-        thumbnail: `https://meet.sariska.io/static/media/ocean_b26b6f03864ea9ebc1263d9c50f0c59b.jpeg`,
-        url: `https://s3.ap-south-1.amazonaws.com/${process.env.REACT_APP_API_SERVICE_HOST_NAME}/static/media/ocean_b26b6f03864ea9ebc1263d9c50f0c59b.jpeg`
-    }
-]
-
-
 export const DROPBOX_APP_KEY = "hey9dkz8x8s3x74";
 export const CHECK_ROOM_URL = "https://reservation.sariska.io/room"
 
@@ -128,19 +72,3 @@ export const STREAMING_URL_KEYS = [
     'srt_url',
     'vod_url'
   ]
-
-export const PARTICIPANTS_LOCAL_PROPERTIES = {
-    HANDRAISE: "handraise",
-    UNMUTE_AUDIO: "unmuteAudio",
-    UNMUTE_VIDEO: "unmuteVideo",
-    ANNOTATION: "annotation",
-    ANNOTATION_TOOL: "annotationTool",
-    ENABLE_MEDIA: "enableMedia"
-}
-
-export const ANNOTATION_TOOLS = {
-    pen: 'PEN',
-    emoji: 'EMOJI',
-    circle: 'CIRCLE',
-    textbox: 'TEXTBOX'
-}

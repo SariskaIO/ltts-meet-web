@@ -3,7 +3,7 @@ import {EXIT_FULL_SCREEN_MODE, GRID, SPEAKER} from "../../constants";
 import { isMobileOrTab } from "../../utils";
 
 const initialState  = {
-    type: SPEAKER,  //default layout,
+    type: isMobileOrTab() ? GRID : SPEAKER,  //default layout,
     mode: EXIT_FULL_SCREEN_MODE, //default mode,
     pinnedParticipant: {},
     presenterParticipantIds: [],

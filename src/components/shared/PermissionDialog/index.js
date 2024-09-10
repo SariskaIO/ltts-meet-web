@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import {makeStyles} from "@material-ui/core";
 import { color } from '../../../assets/styles/_color';
@@ -34,13 +35,13 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-export default function PermissionDialog({ allowLobbyAccess, denyLobbyAccess, userId, text }) {
+export default function PermissionDialog({displayName, allowLobbyAccess, denyLobbyAccess, userId}) {
     const classes = useStyles();
 
     return (
         <div className={classes.root}>
             <Card className={classes.card}>
-                <div>{text} </div>
+                <div>{displayName} wants to join </div>
                 <div className={classes.controls}>
                     <FancyButton buttonText={'Deny'} onClick={()=>denyLobbyAccess(userId)} width="100px" />
                     &nbsp; &nbsp;

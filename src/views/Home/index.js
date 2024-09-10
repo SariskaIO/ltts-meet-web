@@ -1,16 +1,23 @@
-import React, {useEffect, useState} from "react";
 
-import {makeStyles, Box, Grid} from "@material-ui/core";
+import React, {Fragment, useEffect, useRef, useState} from "react";
+
+import {makeStyles, Box, Grid, Input} from "@material-ui/core";
 import {color} from "../../assets/styles/_color";
-import LobbyRoom from "../../components/home/LobbyRoom";
+//import LobbyRoom from "../../components/home/LobbyRoom";
 import SariskaMediaTransport from "sariska-media-transport";
 import {addLocalTrack} from "../../store/actions/track";
 import {useDispatch, useSelector} from "react-redux";
+
+import { listMediaTrackUrls, setDevices } from "../../store/actions/media";
+import { getVideoCards, trimSpace } from "../../utils";
+import { useLocation } from "react-router-dom";
+import Hls from "hls.js";
+import { useMediaTracks } from "../../hooks/useMediaTracks";
+import MediaTrack from "../../components/home/MediaTrack";
+import LobbyRoom from "../../components/home/LobbyRoom";
+import TextInput from "../../components/shared/TextInput";
 import googleApi from "../../utils/google-apis";
-import {setProfile} from "../../store/actions/profile";
-import {getMeetingId} from "../../utils";
-import { microsoftCalendarApi } from "../../utils/microsoft-apis";
-import { setDevices } from "../../store/actions/media";
+import { setProfile } from "../../store/actions/profile";
 
 const useStyles = makeStyles((theme) => ({
     googleBtn: {
@@ -191,82 +198,18 @@ const useStyles = makeStyles((theme) => ({
 
 const Home = () => {
     const dispatch = useDispatch();
-    const resolution = useSelector(state => state.media?.resolution);
     const localTracksRedux = useSelector(state => state.localTrack);
     SariskaMediaTransport.initialize();
     SariskaMediaTransport.setLogLevel(SariskaMediaTransport.logLevels.ERROR); //TRACE ,DEBUG, INFO, LOG, WARN, ERROR
     const classes = useStyles();
-    const [googleAPIData, setGoogleAPIData] = useState({isSignedIn: false, calenderEntries: []});
-    const [localTracks, setLocalTracks] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [updateCalenderLoader, setUpdateCalenderLoader] = useState(null);
+    const [streamUrl, setStreamUrl] = useState(null);
+    const [localTracks, setLocalTracks] = useState([]);
+    const [googleAPIData, setGoogleAPIData] = useState({isSignedIn: false, calenderEntries: []});
     const iAmRecorder = window.location.hash.indexOf("iAmRecorder") >= 0;
     const iAmTorture = window.location.hash.indexOf("iAmTorture") >= 0;
+    let url ='http://playertest.longtailvideo.com/adaptive/wowzaid3/playlist.m3u8';
 
-
-    const signInIfNotSignedIn = async () => {
-        await googleApi.signInIfNotSignedIn();
-        const profile = await googleApi.getCurrentUserProfile();
-        dispatch(setProfile({id: profile.getId(), name: profile.getName(), email: profile.getEmail(), avatar: profile.getImageUrl()}));
-        googleAPIData.isSignedIn = true;
-        googleAPIData.calenderEntries = await googleApi.getCalendarEntries(0, 30);
-        setGoogleAPIData({...googleAPIData});
-    }
-    
-    const addMeetingLink = async (item) => {
-        setUpdateCalenderLoader(item.id);
-        const meetingUrl = `https://${process.env.REACT_APP_API_SERVICE_HOST_NAME}/${getMeetingId()}`;
-        const text = `Click the following link to join the meeting:\n${meetingUrl}`;
-        await googleApi.updateCalendarEntry(item.id, item.calendarId, meetingUrl, text);
-        googleAPIData.calenderEntries = await googleApi.getCalendarEntries(0, 30);
-
-        setGoogleAPIData({...googleAPIData});
-        setUpdateCalenderLoader(null);
-    }
-
-    const Join = async (meetingUrl) => {
-        window.location.href = meetingUrl;
-    }
-
-    useEffect(() => {
-        SariskaMediaTransport.mediaDevices.enumerateDevices((allDevices) => {
-          dispatch(setDevices(allDevices));
-        });
-      }, []);
-
-    useEffect(()=>{
-        if (iAmRecorder) {
-            setLocalTracks([]);
-            return;
-        }
-        if (localTracksRedux.length > 0)  {
-            return;
-        }
-        const createNewLocalTracks = async () => {
-            let tracks = [];
-            const options = {
-                devices: ["audio", "video"],
-                resolution
-            };
-
-            try  {
-                const [audioTrack] = await SariskaMediaTransport.createLocalTracks({devices: ["audio"], resolution});
-                tracks.push(audioTrack);
-            } catch(e) {
-                console.log("failed to fetch audio device");
-            }
-
-            try  {
-                const [videoTrack]  = await SariskaMediaTransport.createLocalTracks({devices: ["video"], resolution});
-                tracks.push(videoTrack);
-            } catch(e) {
-                console.log("failed to fetch video device");
-            }
-            setLocalTracks(tracks);
-            tracks.forEach(track=>dispatch(addLocalTrack(track)));
-        };
-        createNewLocalTracks();
-    },[])
     useEffect(() => {
         const googleLogin = async () => {
             try {
@@ -281,27 +224,23 @@ const Home = () => {
             setLoading(false);
         }
 
-        const microsoftLogin = async () => {
-            try {
-                const response = await microsoftCalendarApi?.isSignedIn();
-            } catch (e) {}
-            setLoading(false);
-        }
-
         googleLogin();
-        microsoftLogin();
     }, []);
 
+    useEffect(() => {
+        SariskaMediaTransport.mediaDevices.enumerateDevices((allDevices) => {
+          dispatch(setDevices(allDevices));
+        });
+      }, []);
+    
     return (
         <Box className={classes.root}>
             <Grid className={classes.gridContainer} container>
                 <Grid item md={12} className={classes.gridChild}>
                     <Box >
-                        { iAmTorture ?
-                            localTracks?.length > 0 && <LobbyRoom tracks={localTracks}/> :
-                            <LobbyRoom tracks={localTracks}/> 
-                        }
-                    </Box>
+            {streamUrl ? <MediaTrack streamUrl={streamUrl} setLocalTracks={setLocalTracks} iAmRecorder={iAmRecorder} localTracksRedux={localTracksRedux}/> : null}
+                        <LobbyRoom localTracks={localTracks} streamUrl={streamUrl} setStreamUrl={setStreamUrl} />
+                        </Box>
                 </Grid>
             </Grid>
         </Box>

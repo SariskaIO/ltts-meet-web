@@ -1,4 +1,4 @@
-import { SET_CAMERA, SET_MICROPHONE, SET_RESOLUTION, SET_SPEAKER, SET_DEVICES, ENABLE_PARTICIPANT_MEDIA } from "./types"
+import { SET_CAMERA, SET_MICROPHONE, SET_RESOLUTION, SET_SPEAKER, SET_DEVICES, LIST_MEDIA_URLS } from "./types"
 
 export const setMicrophone = (value) => {
     return {
@@ -36,9 +36,10 @@ export const setYourResolution = (value) => {
     }
 }
 
-export const enableParticipantMedia = (payload) => {
+
+export const listMediaTrackUrls = (urls) => {
     return {
-        type: ENABLE_PARTICIPANT_MEDIA,
-        payload
+        type: LIST_MEDIA_URLS,
+        payload: urls
     }
 }

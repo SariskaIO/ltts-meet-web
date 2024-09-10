@@ -50,7 +50,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function TextInput({label, width, value, onChange, onKeyPress}) {
+export default function TextInput({label, width, value, onChange, onKeyPress, defaultValue}) {
     const props = {width: width};
   const classes = useStyles(props);
 
@@ -63,6 +63,7 @@ export default function TextInput({label, width, value, onChange, onKeyPress}) {
           value={value}
           onChange={onChange}
           onKeyPress={onKeyPress}
+          defaultValue={defaultValue}
         />
       </div>
     </form>
