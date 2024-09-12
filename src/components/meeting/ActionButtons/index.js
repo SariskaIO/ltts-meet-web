@@ -1,11 +1,8 @@
 import {
-  Badge,
   Box,
   Button,
-  Drawer,
   Hidden,
   makeStyles,
-  Tooltip,
   Typography,
 } from "@material-ui/core";
 import React, { useEffect, useRef, useState } from "react";
@@ -13,31 +10,13 @@ import SariskaMediaTransport from "sariska-media-transport";
 import { color } from "../../../assets/styles/_color";
 import { useHistory } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import classnames from "classnames";
 import CallEndIcon from "@material-ui/icons/CallEnd";
-import MicIcon from "@material-ui/icons/Mic";
-import MicOffIcon from "@material-ui/icons/MicOff";
-import VideocamIcon from "@material-ui/icons/Videocam";
-import VideocamOffIcon from "@material-ui/icons/VideocamOff";
-import ScreenShareIcon from "@material-ui/icons/ScreenShare";
-import StopScreenShareIcon from '@material-ui/icons/StopScreenShare';
-import PanToolIcon from "@material-ui/icons/PanTool";
-import GroupIcon from "@material-ui/icons/Group";
-import ChatIcon from "@material-ui/icons/Chat";
-import ViewListIcon from "@material-ui/icons/ViewList";
-import ViewComfyIcon from "@material-ui/icons/ViewComfy";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import CloseIcon from '@material-ui/icons/Close';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import {
-  addLocalTrack,
-  localTrackMutedChanged,
-  removeLocalTrack,
-} from "../../../store/actions/track";
-import {
   ENTER_FULL_SCREEN_MODE,
   EXIT_FULL_SCREEN_MODE,
-  GRID,
   PRESENTATION,
   SHARED_DOCUMENT,
   SPEAKER,
@@ -46,30 +25,23 @@ import {
   GET_PRESENTATION_STATUS,
   RECEIVED_PRESENTATION_STATUS,
   streamingMode,
+  STREAMING_FLAGS,
 } from "../../../constants";
 import {
   setFullScreen,
   setLayout,
-  setPresenter,
   setPresentationtType,
 } from "../../../store/actions/layout";
 import { clearAllReducers } from "../../../store/actions/conference";
 import {
   exitFullscreen,
-  formatAMPM,
   isFullscreen,
   requestFullscreen,
   startStreamingInSRSMode,
   stopStreamingInSRSMode,
 } from "../../../utils";
-import classNames from "classnames";
-import ParticipantDetails from "../../shared/ParticipantDetails";
-import { unreadMessage } from "../../../store/actions/chat";
-import { withStyles } from "@material-ui/styles";
-import ChatPanel from "../../shared/Chat";
 import MoreAction from "../../shared/MoreAction";
 import DrawerBox from "../../shared/DrawerBox";
-import { addSubtitle } from "../../../store/actions/subtitle";
 import { showSnackbar } from "../../../store/actions/snackbar";
 import StyledTooltip from "../../shared/StyledTooltip";
 import LiveStreamingDetails from "../../shared/LiveStreamingDetails";
@@ -77,21 +49,14 @@ import { showNotification } from "../../../store/actions/notification";
 import googleApi from "../../../utils/google-apis";
 import LiveStreamDialog from "../../shared/LiveStreamDialog";
 
-const StyledBadge = withStyles((theme) => ({
-  badge: {
-    background: color.primary,
-    top: 6,
-    right: 10,
-  },
-}))(Badge);
-
 const useStyles = makeStyles((theme) => ({
   root: {
+    zIndex: 9,
     height: "44px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    bottom: "16px",
+    top: "16px",
     width: "100%",
     position: "fixed",
     color: color.white,
@@ -270,30 +235,12 @@ const useStyles = makeStyles((theme) => ({
 
 const ActionButtons = ({ dominantSpeakerId }) => {
   const history = useHistory();
-  const audioTrack = useSelector((state) => state.localTrack).find((track) =>
-    track.isAudioTrack()
-  );
-  const videoTrack = useSelector((state) => state.localTrack).find((track) =>
-    track.isVideoTrack()
-  );
   const classes = useStyles();
   const dispatch = useDispatch();
   const conference = useSelector((state) => state.conference);
-  const localTracks = useSelector((state) => state.localTrack);
-  const [presenting, setPresenting] = useState(false);
-  const [time, setTime] = useState(formatAMPM(new Date()));
   const profile = useSelector((state) => state.profile);
-  const layout = useSelector((state) => state.layout);
-  const unread = useSelector((state) => state.chat.unreadMessage);
-  const [raiseHand, setRaiseHand] = useState(false);
   const [featureStates, setFeatureStates] = useState({});
-  const [chatState, setChatState] = React.useState({
-    right: false,
-  });
   const [liveState, setLiveState] = React.useState({
-    right: false,
-  });
-  const [participantState, setParticipantState] = React.useState({
     right: false,
   });
   const [moreActionState, setMoreActionState] = React.useState({
@@ -304,89 +251,13 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   const [broadcasts, setBroadcasts] = useState([]);
   const [streamingUrls, setStreamingUrls] = useState([]);
   const [streamKey, setStreamKey] = useState('');
+  const [isLowLatencyUrl, setIsLowLatencyUrl] = useState(false);
 
-  const skipResize = false;
   const streamingSession = useRef(null);
 
   const action = (actionData) => {
     featureStates[actionData.key] = actionData.value;
     setFeatureStates({ ...featureStates });
-  };
-
-  const muteAudio = async () => {
-    await audioTrack?.mute();
-    dispatch(localTrackMutedChanged());
-  };
-
-  const unmuteAudio = async () => {
-    await audioTrack?.unmute();
-    dispatch(localTrackMutedChanged());
-  };
-
-  const muteVideo = async () => {
-    await videoTrack?.mute();
-    dispatch(localTrackMutedChanged());
-  };
-
-  const unmuteVideo = async () => {
-    await videoTrack?.unmute();
-    dispatch(localTrackMutedChanged());
-  };
-
-  const shareScreen = async () => {
-    let desktopTrack;
-    try {
-      const tracks = await SariskaMediaTransport.createLocalTracks({
-        resolution: 720,
-        devices: ["desktop"],
-      });
-      desktopTrack = tracks.find((track) => track.videoType === "desktop");
-    } catch (e) {
-      dispatch(
-        showSnackbar({
-          autoHide: true,
-          message:
-            "Oops, Something wrong with screen sharing permissions. Try reload",
-        })
-      );
-      return;
-    }
-    await conference.addTrack(desktopTrack);
-    desktopTrack.addEventListener(
-      SariskaMediaTransport.events.track.LOCAL_TRACK_STOPPED,
-      async () => {
-        stopPresenting();
-      }
-    );
-    conference.setLocalParticipantProperty("presenting", "start");
-    dispatch(addLocalTrack(desktopTrack));
-    dispatch(
-      setPresenter({ participantId: conference.myUserId(), presenter: true })
-    );
-    setPresenting(true);
-  };
-
-  const stopPresenting = async () => {
-    const desktopTrack = localTracks.find(
-      (track) => track.videoType === "desktop"
-    );
-    await conference.removeTrack(desktopTrack);
-    dispatch(
-      setPresenter({ participantId: conference.myUserId(), presenter: false })
-    );
-    dispatch(removeLocalTrack(desktopTrack));
-    conference.setLocalParticipantProperty("presenting", "stop");
-    setPresenting(false);
-  };
-
-  const startRaiseHand = () => {
-    conference.setLocalParticipantProperty("handraise", "start");
-    setRaiseHand(true);
-  };
-
-  const stopRaiseHand = () => {
-    conference.setLocalParticipantProperty("handraise", "stop");
-    setRaiseHand(false);
   };
 
   const startStreaming = async () => {
@@ -477,11 +348,17 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           action({ key: "streaming", value: true }); 
        }
     }else{
-      const session = await conference.startRecording({
-        mode: SariskaMediaTransport.constants.recording.mode.STREAM,
-        streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
-      });
-      streamingSession.current = session;
+      const streamingResponse = await startStreamingInSRSMode(null, null, STREAMING_FLAGS);
+         if(streamingResponse.started){
+          const session = await conference.startRecording({
+            mode: SariskaMediaTransport.constants.recording.mode.STREAM,
+            streamId: streamingResponse.rtmp_ingest_url,
+          //  streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
+          });
+          setIsLowLatencyUrl(true);
+          setStreamingUrls(streamingResponse)
+          streamingSession.current = session;
+        } 
     }
     setOpenLivestreamDialog(false);
   };
@@ -512,11 +389,17 @@ const ActionButtons = ({ dominantSpeakerId }) => {
       selectedStream.result.items[0]?.cdn?.ingestionInfo?.streamName;
     setOpenLivestreamDialog(false);
 
-      const session = await conference.startRecording({
-        mode: SariskaMediaTransport.constants.recording.mode.STREAM,
-        streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
-      });
-      streamingSession.current = session;
+    const streamingResponse = await startStreamingInSRSMode(null, null, STREAMING_FLAGS);
+       if(streamingResponse.started){
+        const session = await conference.startRecording({
+          mode: SariskaMediaTransport.constants.recording.mode.STREAM,
+          streamId: streamingResponse.rtmp_ingest_url,
+        //  streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
+        });
+        setIsLowLatencyUrl(true);
+        setStreamingUrls(streamingResponse)
+        streamingSession.current = session;
+       } 
   };
 
   const stopStreaming = async () => {
@@ -543,6 +426,11 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           action({ key: "streaming", value: false });
       }
     }else{
+      const streamingResponse = await stopStreamingInSRSMode(profile.meetingTitle);
+       if(!streamingResponse.started){
+         setIsLowLatencyUrl(false);
+         setStreamingUrls({});
+       }
       await conference.stopRecording(
         localStorage.getItem("streaming_session_id")
       );
@@ -562,15 +450,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     }
     setLiveState({ ...liveState, [anchor]: open });
   };
-  const toggleParticipantDrawer = (anchor, open) => (event) => {
-    if (
-      event.type === "keydown" &&
-      (event.key === "Tab" || event.key === "Shift")
-    ) {
-      return;
-    }
-    setParticipantState({ ...participantState, [anchor]: open });
-  };
 
   const handleStreamKeyChange=(e)=>{
     setStreamKey(e.target.value);
@@ -586,46 +465,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           <CloseIcon onClick={toggleLiveDrawer("right", false)}/>
         </Hidden>
       </Box>
-      <LiveStreamingDetails streamingUrls={streamingUrls} featureStates={featureStates} stopStreaming={stopStreaming} startStreaming={startStreaming} handleStreamKeyChange={handleStreamKeyChange} streamKey={streamKey}/>
-    </>
-  );
-
-  const participantList = (anchor) => (
-    <>
-      <Box className={classes.participantHeader}>
-        <Typography variant="h6" className={classes.title}>
-          Participants
-        </Typography>
-        <Hidden mdUp>
-          <CloseIcon onClick={toggleParticipantDrawer("right", false)}/>
-        </Hidden>
-      </Box>
-      <ParticipantDetails />
-    </>
-  );
-
-  const toggleChatDrawer = (anchor, open) => (event) => {
-    if (
-      event.type === "keydown" &&
-      (event.key === "Tab" || event.key === "Shift")
-    ) {
-      return;
-    }
-    setChatState({ ...chatState, [anchor]: open });
-    dispatch(unreadMessage(0));
-  };
-
-  const chatList = (anchor) => (
-    <>
-      <Box className={classes.participantHeader}>
-        <Typography variant="h6" className={classes.title}>
-          Messages
-        </Typography>
-        <Hidden mdUp>
-          <CloseIcon onClick={toggleChatDrawer("right", false)}/>
-        </Hidden>
-      </Box>
-      <ChatPanel />
+      <LiveStreamingDetails streamingUrls={streamingUrls} featureStates={featureStates} stopStreaming={stopStreaming} startStreaming={startStreaming} handleStreamKeyChange={handleStreamKeyChange} streamKey={streamKey} isLowLatencyUrl={isLowLatencyUrl}/>
     </>
   );
 
@@ -659,27 +499,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     document.removeEventListener("MSFullscreenChange", AddFShandler);
   };
 
-  const resize = () => {
-    if (skipResize) {
-      return;
-    }
-    if (window.innerHeight == window.screen.height) {
-      dispatch(setFullScreen(ENTER_FULL_SCREEN_MODE));
-    } else {
-      dispatch(setFullScreen(EXIT_FULL_SCREEN_MODE));
-    }
-  };
-
-  const toggleView = () => {
-    if (layout.type === PRESENTATION || layout.type === SPEAKER) {
-      dispatch(setLayout(GRID));
-    } else if (featureStates.whiteboard || featureStates.sharedDocument) {
-      dispatch(setLayout(PRESENTATION));
-    } else {
-      dispatch(setLayout(SPEAKER));
-    }
-  };
-
   const toggleMoreActionDrawer = (anchor, open) => (event) => {
     if (
       event.type === "keydown" &&
@@ -698,11 +517,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         featureStates={featureStates}
         setLayoutAndFeature={setLayoutAndFeature}
         onClick={toggleMoreActionDrawer("right", false)}
-        participantOnClick = {toggleParticipantDrawer("right", true)}
-        participantTitle = "Participants Details"
-        chatOnClick = {toggleChatDrawer("right", true)}
-        chatTitle="Chat Box"
-        layoutOnClick = {toggleView}
       />
     </>
   );
@@ -714,24 +528,11 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   };
 
   useEffect(() => {
-    // let doit;
-    // document.documentElement.addEventListener('mouseleave', () => skipResize = false);
-    // document.documentElement.addEventListener('mouseenter', () => skipResize = true)
-
-    const interval = setInterval(() => {
-      setTime(formatAMPM(new Date()));
-    }, 1000);
     document.addEventListener("dblclick", toggleFullscreen);
-    // window.addEventListener("resize", ()=> {
-    //   clearTimeout(doit);
-    //   doit = setTimeout(resize, 250);
-    // });
     addFullscreenListeners();
     return () => {
       document.removeEventListener("dblclick", toggleFullscreen);
-      clearInterval(interval);
       removeFullscreenListeners();
-      // window.removeEventListener("resize", resize);
     };
   }, []);
 
@@ -851,28 +652,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     );
 
     conference.addEventListener(
-      SariskaMediaTransport.events.conference.TRANSCRIPTION_STATUS_CHANGED,
-      (status) => {
-        if (status === "ON") {
-          conference.setLocalParticipantProperty("transcribing", true);
-          dispatch(
-            showSnackbar({ autoHide: true, message: "Caption started" })
-          );
-          action({ key: "caption", value: true });
-        }
-
-        if (status === "OFF") {
-          conference.removeLocalParticipantProperty("transcribing");
-          dispatch(
-            showSnackbar({ autoHide: true, message: "Caption stopped" })
-          );
-          dispatch(addSubtitle({}));
-          action({ key: "caption", value: false });
-        }
-      }
-    );
-
-    conference.addEventListener(
       SariskaMediaTransport.events.conference.RECORDER_STATE_CHANGED,
       (data) => {
           if (streamingMode !== 'srs' && data._statusFromJicofo === "on" && data._mode === "stream") {
@@ -941,24 +720,25 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   
   return (
     <Box id="footer" className={classes.root}>
-      <Hidden smDown>
+      {/* <Hidden smDown>
         <Box className={classes.infoContainer}>
           <Box>{time}</Box>
           <Box className={classes.separator}>|</Box>
           <Box>{profile.meetingTitle}</Box>
         </Box>
-      </Hidden>
+      </Hidden> */}
       <Hidden smDown>
-        <Box sx={{display: 'flex'}}>
-        <StyledTooltip title="Leave Call">
-          <CallEndIcon onClick={leaveConference} className={classes.end} />
-        </StyledTooltip>
+        <Box sx={{display: 'flex', justifyContent: 'space-between', width: '100%', zIndex: 99}}>
         <StyledTooltip title={"Go Live"}>
           <Box className={classes.liveBox} onClick={toggleLiveDrawer("right", true)} >          
             <FiberManualRecordIcon className={classes.dot} />
-            <Button className={classes.live}>{"Go Live"}</Button>
+            <Button className={classes.live}>{"Live"}</Button>
           </Box>
         </StyledTooltip>
+        {/* <StyledTooltip title="Leave Call">
+          <CallEndIcon onClick={leaveConference} className={classes.end} />
+        </StyledTooltip> */}
+        
         </Box>
         <DrawerBox
           open={liveState["right"]}
@@ -975,7 +755,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         selectedBroadcast={selectedBroadcast}
       />
       <Box className={classes.permissions}>
-        <StyledTooltip
+        {/* <StyledTooltip
           title={
             audioTrack
               ? audioTrack?.isMuted()
@@ -1069,8 +849,8 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         <StyledTooltip title="Leave Call">
           <CallEndIcon onClick={leaveConference} className={classes.end} />
         </StyledTooltip>
-      </Hidden>
-        <StyledTooltip title="More Actions">
+      </Hidden>*/}
+        {/* <StyledTooltip title="More Actions">
           <MoreVertIcon
             onClick={toggleMoreActionDrawer("right", true)}
             className={classes.more}
@@ -1081,8 +861,8 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           onClose={toggleMoreActionDrawer("right", false)}
         >
           {moreActionList("right")}
-        </DrawerBox>
-      </Box>
+        </DrawerBox> */}
+      </Box> 
     </Box>
   );
 };

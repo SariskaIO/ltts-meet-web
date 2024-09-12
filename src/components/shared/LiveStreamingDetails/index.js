@@ -39,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const LiveStreamingDetails = ({featureStates, stopStreaming, startStreaming, streamingUrls, streamKey, handleStreamKeyChange}) => {
+const LiveStreamingDetails = ({featureStates, stopStreaming, startStreaming, streamingUrls, streamKey, handleStreamKeyChange, isLowLatencyUrl}) => {
   const classes = useStyles();
   const [copySuccess, setCopySuccess] = useState('');
   const notification = useSelector(state => state.notification);
@@ -73,7 +73,14 @@ const LiveStreamingDetails = ({featureStates, stopStreaming, startStreaming, str
         </Button>
         {featureStates.streaming && Object.keys(streamingUrls)?.length>0 ? <Box>
         <Typography style={{color: color.white, marginTop: '0.5rem', marginLeft: '8px', marginBottom: '8px'}}>Click to copy Streaming Url</Typography>
-          {STREAMING_URL_KEYS.map(url => (
+        {isLowLatencyUrl ? 
+             <Box sx={{display: 'flex', mb: 1, mt: 1}} >
+             <Button style={{color: color.primaryLight}} onClick={()=>copyToClipboard(streamingUrls['low_latency_hls_url'] || streamingUrls['low_latency_hls_url'])}>
+               low_latency_hls_url
+             </Button>
+             </Box>
+           :
+           STREAMING_URL_KEYS.map(url => (
             <Box sx={{display: 'flex', mb: 1, mt: 1}} key={url}>
               <Button style={{color: color.primaryLight}} onClick={()=>copyToClipboard(streamingUrls[url])}>
                 {url}

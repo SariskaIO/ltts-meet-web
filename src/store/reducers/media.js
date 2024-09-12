@@ -3,7 +3,8 @@ import {
   SET_MICROPHONE,
   SET_RESOLUTION,
   SET_SPEAKER,
-  SET_DEVICES
+  SET_DEVICES,
+  LIST_MEDIA_URLS
 } from "../actions/types";
 
 const initialState = {
@@ -12,7 +13,8 @@ const initialState = {
   camera: "",
   devices: null,
   resolution: 720,
-  aspectRatio: 16/9
+  aspectRatio: 16/9,
+  mediaUrls: []
 };
 
 export const media = (state = initialState, action) => {
@@ -43,6 +45,9 @@ export const media = (state = initialState, action) => {
       return {
         ...state,
       };
+    case LIST_MEDIA_URLS:
+      state.mediaUrls.push(action.payload);
+      return {...state};
     default:
       return state;
   }

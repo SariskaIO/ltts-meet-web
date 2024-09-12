@@ -12,9 +12,6 @@ import {
   updateLocalTrack,
   remoteTrackMutedChanged,
 } from "../../store/actions/track";
-import GridLayout from "../../components/meeting/GridLayout";
-import SpeakerLayout from "../../components/meeting/SpeakerLayout";
-import PresentationLayout from "../../components/meeting/PresentationLayout";
 import Notification from "../../components/shared/Notification";
 import {
   SPEAKER,
@@ -22,11 +19,9 @@ import {
   GRID,
   ENTER_FULL_SCREEN_MODE,
 } from "../../constants";
-import { addMessage } from "../../store/actions/message";
 import { getUserById, preloadIframes, getDefaultDeviceId, isPortrait, isMobileOrTab } from "../../utils";
 import PermissionDialog from "../../components/shared/PermissionDialog";
 import SnackbarBox from "../../components/shared/Snackbar";
-import { unreadMessage } from "../../store/actions/chat";
 import Home from "../Home";
 import {
   setPresenter,
@@ -36,9 +31,7 @@ import {
   setDisconnected,
   setLayout,
 } from "../../store/actions/layout";
-import { setAudioLevel } from "../../store/actions/audioIndicator";
 import { showNotification } from "../../store/actions/notification";
-import { addSubtitle } from "../../store/actions/subtitle";
 import { useHistory } from "react-router-dom";
 import { setUserResolution } from "../../store/actions/layout";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
@@ -48,6 +41,8 @@ import {
   setDevices,
   setMicrophone,
 } from "../../store/actions/media";
+import CompositeLayout from "../../components/meeting/CompositeLayout";
+import SpeakerLayout from "../../components/meeting/SpeakerLayout";
 
 const Meeting = () => {
   const history = useHistory();
@@ -61,31 +56,20 @@ const Meeting = () => {
   const isOnline = useOnlineStatus();
   const resolution = useSelector((state) => state.media?.resolution);
   const [dominantSpeakerId, setDominantSpeakerId] = useState(null);
-  const [lobbyUser, setLobbyUser] = useState([]);
   let oldDevices = useSelector((state) => state?.media?.devices);
 
   const useStyles = makeStyles((theme) => ({
     root: {
-      display: "flex",
-      flexDirection: "column",
-      background: color.secondaryDark,
-      minHeight:
-        layout.mode === ENTER_FULL_SCREEN_MODE ? "100vh" : "calc(100vh - 16px)",
+      // display: "flex",
+      // flexDirection: "column",
+      // background: color.secondaryDark,
+      // minHeight:
+      //   layout.mode === ENTER_FULL_SCREEN_MODE ? "100vh" : "calc(100vh - 16px)",
     },
   }));
 
   const classes = useStyles();
   let ingoreFirstEvent = true;
-
-  const allowLobbyAccess = (userId) => {
-    conference.lobbyApproveAccess(userId);
-    setLobbyUser((lobbyUser) => lobbyUser.filter((item) => item.id !== userId));
-  };
-
-  const denyLobbyAccess = (userId) => {
-    conference.lobbyDenyAccess(userId);
-    setLobbyUser((lobbyUser) => lobbyUser.filter((item) => item.id !== userId));
-  };
 
   const deviceListChanged = async (devices) => {
     let selectedDeviceOld,
@@ -256,13 +240,6 @@ const Meeting = () => {
     );
 
     conference.addEventListener(
-      SariskaMediaTransport.events.conference.SUBTITLES_RECEIVED,
-      (id, name, text) => {
-        dispatch(addSubtitle({ name, text }));
-      }
-    );
-
-    conference.addEventListener(
       SariskaMediaTransport.events.conference.TRACK_MUTE_CHANGED,
       (track) => {
         dispatch(remoteTrackMutedChanged());
@@ -334,29 +311,11 @@ const Meeting = () => {
       }
     );
 
-    conference.addEventListener(
-      SariskaMediaTransport.events.conference.LOBBY_USER_JOINED,
-      (id, displayName) => {
-        new Audio(
-          "https://sdk.sariska.io/knock_0b1ea0a45173ae6c10b084bbca23bae2.ogg"
-        ).play();
-        setLobbyUser((lobbyUser) => [...lobbyUser, { id, displayName }]);
-      }
-    );
 
     conference.addEventListener(
       SariskaMediaTransport.events.conference.MESSAGE_RECEIVED,
       (id, text, ts) => {
-        dispatch(
-          addMessage({
-            text: text,
-            user: getUserById(id, conference),
-            time: new Date(),
-          })
-        );
-        if (id !== conference.myUserId()) {
-          dispatch(unreadMessage(1));
-        }
+       console.log('MESSAGE_RECEIVED')
       }
     );
 
@@ -400,13 +359,6 @@ const Meeting = () => {
     );
 
     conference.addEventListener(
-      SariskaMediaTransport.events.conference.TRACK_AUDIO_LEVEL_CHANGED,
-      (participantId, audioLevel) => {
-        dispatch(setAudioLevel({ participantId, audioLevel }));
-      }
-    );
-
-    conference.addEventListener(
       SariskaMediaTransport.events.conference.CONNECTION_INTERRUPTED,
       () => {
         dispatch(
@@ -423,14 +375,7 @@ const Meeting = () => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.ENDPOINT_MESSAGE_RECEIVED,
       async (participant, data) => {
-        if (
-          data.event === "LOBBY-ACCESS-GRANTED" ||
-          data.event === "LOBBY-ACCESS-DENIED"
-        ) {
-          setLobbyUser((lobbyUser) =>
-            lobbyUser.filter((item) => item.displayName !== data.name)
-          );
-        }
+        console.log('ENDPOINT_MESSAGE_RECEIVED')
       }
     );
 
@@ -546,32 +491,15 @@ const Meeting = () => {
     justifyContent = "space-around";
     paddingTop = 0;
   }
-  
   return (
     <Box
-      style={{ justifyContent, paddingTop: paddingTop }}
       className={classes.root}
     >
-      {layout.type === SPEAKER && (
-        <SpeakerLayout dominantSpeakerId={dominantSpeakerId} />
-      )}
-      {layout.type === GRID && (
-        <GridLayout dominantSpeakerId={dominantSpeakerId} />
-      )}
-      
-      {layout.type === PRESENTATION && (
-        <PresentationLayout dominantSpeakerId={dominantSpeakerId} />
-      )}
-      
       <ActionButtons dominantSpeakerId={dominantSpeakerId} />
-      {lobbyUser.map((item) => (
-        <PermissionDialog
-          denyLobbyAccess={denyLobbyAccess}
-          allowLobbyAccess={allowLobbyAccess}
-          userId={item.id}
-          displayName={item.displayName}
-        />
-      ))}
+      {/* <SpeakerLayout dominantSpeakerId={dominantSpeakerId}/> */}
+        <CompositeLayout dominantSpeakerId={dominantSpeakerId} />
+      
+      
       <SnackbarBox notification={notification} />
       <ReconnectDialog open={layout.disconnected === "lost"} />
       <Notification snackbar={snackbar} />

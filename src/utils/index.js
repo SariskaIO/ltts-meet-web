@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import {GENERATE_TOKEN_URL, GET_PRESIGNED_URL, ENTER_FULL_SCREEN_MODE, LIVE_STREAMING_START_URL, LIVE_STREAMING_STOP_URL} from "../constants";
+import {GENERATE_TOKEN_URL, GET_PRESIGNED_URL, ENTER_FULL_SCREEN_MODE, LIVE_STREAMING_START_URL, LIVE_STREAMING_STOP_URL, LTTS_API_SERVICE_URL} from "../constants";
 import linkifyHtml from 'linkify-html';
 
 const Compressor = require('compressorjs');
@@ -24,6 +24,21 @@ export function getMeetingId() {
 }
 
 
+export function generateUsername(){
+    const characters ='abcdefghijklmnopqrstuvwxyz';
+    function generateString(length) {
+        let result = ' ';
+        const charactersLength = characters.length;
+        for ( let i = 0; i < length; i++ ) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+    }
+    const str = generateString(6).trim()
+    const strArr = str.match(/.{3}/g);
+    return strArr.join("_");
+}
+
 export function getJitsiMeetGlobalNS() {
     if (!window.SariskaMediaTransport) {
         window.SariskaMediaTransport = {};
@@ -36,6 +51,38 @@ export function getJitsiMeetGlobalNS() {
     return window.SariskaMediaTransport.app;
 }
 
+export const apiCall = async(path, method, body={}, headers={}) => {
+    let url = `${LTTS_API_SERVICE_URL}${path}`;
+    const requestHeaders = {
+        "Content-Type": "application/json", 
+        ...headers
+    };
+    if (method.toUpperCase() === "GET" && Object.keys(body).length) {
+        const queryString = new URLSearchParams(body).toString();
+        url = `${url}?${queryString}`;
+    }
+    const payload = {
+        method,
+        headers: requestHeaders,
+    };
+    if (method.toUpperCase() !== "GET" && method.toUpperCase() !== "HEAD") {
+        payload.body = JSON.stringify(body);
+    }
+    try {
+        const response = await fetch(url, payload);
+        console.log('response', response)
+        if (response.ok) {
+            return await response.json();
+        }
+        return {
+            httpStatus: response.status,
+            statusText: response.statusText,
+            body: await response.json(),
+        };
+    }catch(error){
+        return {error, httpStatus: 500};
+    }
+}
 
 export function createDeferred() {
     const deferred = {};
@@ -81,8 +128,8 @@ export async function getToken(profile, name, avatarColor) {
     }
 }
 
-export async function startStreamingInSRSMode(roomName, streamKey) {
-    if(!streamKey){
+export async function startStreamingInSRSMode(roomName, streamKey, flags) {
+    if(!flags && !streamKey){
         console.log('stream key is missing');
         return;
     }
@@ -92,7 +139,7 @@ export async function startStreamingInSRSMode(roomName, streamKey) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem("SARISKA_TOKEN")}`
         },
-        body: JSON.stringify({
+        body: streamKey ? JSON.stringify({
             stream_keys: [
                 {
                     'key': 'youtube',
@@ -100,7 +147,9 @@ export async function startStreamingInSRSMode(roomName, streamKey) {
                 }
             ],
             room_name: roomName
-        })
+            })
+            :
+            JSON.stringify(flags)
     };
     try {
         const response = await fetch(LIVE_STREAMING_START_URL, body);
@@ -378,11 +427,11 @@ export function calculateRowsAndColumns(totalParticipant, viewportWidth, viewpor
     }
 } 
 
-export function isMobile() {
-    let check = false;
-    (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
-    return check;
-}
+// export function isMobile() {
+//     let check = false;
+//     (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
+//     return check;
+// }
 
 export function isPortrait(){
     return window.innerWidth <=620 ? true : false;
@@ -635,3 +684,91 @@ export function formatBytes(bytes) {
 export const getParticipants = (conference, localUser) => {
     return [...conference.getParticipantsWithoutHidden(), { _identity: { user: localUser }, _id: localUser.id }]
 }
+
+export async function fetchJsonData(path) {
+    try {
+        const response = await fetch(path);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch data from ${path}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(`Error fetching JSON data:`, error);
+        return null;
+    }
+}
+
+export async function getVideoCards() {
+    const videos = await fetchJsonData('/data/railCards.json');
+    return videos;
+}
+
+export const captureClick = (event, layoutRef) => {
+    if(layoutRef?.current){
+    const element = layoutRef.current;
+
+  const { clientX, clientY } = event;
+
+  // Get the width and height of the video element
+  const videoWidth = element?.clientWidth;
+  const videoHeight = element?.clientHeight;
+
+  // Define the areas of each stitched video
+  const topVideoHeight = videoHeight * 0.7; // First video takes 80% of the height
+  const bottomVideosHeight = videoHeight * 0.3; // The remaining 20% is for the bottom 4 videos
+  const bottomVideoWidth = videoWidth / 5; // Each bottom video takes 1/4 of the width
+
+  let clickedVideo = '';
+
+  // Check if the click is within the top video
+  if (clientY <= topVideoHeight) {
+    clickedVideo = 'Top Video';
+  } else {
+    // Check which of the bottom 4 videos was clicked
+    const relativeX = clientX;
+    if (relativeX < bottomVideoWidth) {
+      clickedVideo = 'Bottom Video 1';
+    } else if (relativeX < bottomVideoWidth * 2) {
+      clickedVideo = 'Bottom Video 2';
+    } else if (relativeX < bottomVideoWidth * 3) {
+      clickedVideo = 'Bottom Video 3';
+    } else if (relativeX < bottomVideoWidth * 4) {
+        clickedVideo = 'Bottom Video 4';
+    } else {
+      clickedVideo = 'Bottom Video 5';
+    }
+  }
+
+  console.log(`Clicked on: ${clickedVideo}`, event, clientX, clientY, videoWidth, videoHeight, topVideoHeight, bottomVideoWidth);
+
+    }
+}
+
+export const getLocalParticipant = (conference) => {
+    if(!conference) return;
+    const localUser = conference.getLocalUser();
+    return { _identity: { user: localUser }, _id: localUser.id };
+}
+
+export const getModerator = (conference) => {
+    if(!conference){
+        return null;
+    }
+    let localUser = conference.getLocalUser()
+    let totalParticipants = getParticipants(conference, localUser);
+    if(totalParticipants?.length===1){
+        return totalParticipants[0];
+    }
+    if(totalParticipants?.length > 1){
+        let moderator = totalParticipants?.find(participant => participant?._role ==='moderator');
+            if(!moderator) {
+                return getLocalParticipant(conference);
+            }else{
+                return moderator;
+            }
+    }else{
+        return null;
+    }
+  }
+

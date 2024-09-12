@@ -1,4 +1,4 @@
-import { SET_CAMERA, SET_MICROPHONE, SET_RESOLUTION, SET_SPEAKER, SET_DEVICES } from "./types"
+import { SET_CAMERA, SET_MICROPHONE, SET_RESOLUTION, SET_SPEAKER, SET_DEVICES, LIST_MEDIA_URLS } from "./types"
 
 export const setMicrophone = (value) => {
     return {
@@ -33,5 +33,13 @@ export const setYourResolution = (value) => {
     return {
         type: SET_RESOLUTION,
         payload: value
+    }
+}
+
+
+export const listMediaTrackUrls = (urls) => {
+    return {
+        type: LIST_MEDIA_URLS,
+        payload: urls
     }
 }

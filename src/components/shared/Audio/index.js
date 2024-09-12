@@ -7,6 +7,7 @@ const Audio = props => {
         if (!track || !audioElementRef?.current) {
             return;
         }
+        
         track.attach(audioElementRef.current);
         return ()=>{
             track.detach(audioElementRef.current);

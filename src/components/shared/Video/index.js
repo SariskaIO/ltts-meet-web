@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import { makeStyles } from "@material-ui/core";
-import { color } from "../../../assets/styles/_color";
 
 const useStyles = makeStyles(() => ({
   video: {},
@@ -8,10 +7,24 @@ const useStyles = makeStyles(() => ({
 
 const Video = (props) => {
   const classes = useStyles();
-  const { track, isPresenter, borderRadius, width, height, left } = props;
+  const { track, position, height, largeVideoId } = props;
   const videoElementRef = useRef(null);
   useEffect(() => {
-    track?.attach(videoElementRef.current);
+    const videoElement = videoElementRef.current;
+    try {
+        if (track && videoElement) {
+          // Attach the media stream track to the video element
+          track?.attach(videoElement);
+          
+          // return () => {
+          //   // Detach the track when the component is unmounted or track changes
+          //  // track.detach(videoElement);
+          // };
+      }
+    } catch (error) {
+      console.log('error in attaching track', error)
+    }
+    
   }, [track]);
 
   if (!track) {
@@ -20,21 +33,26 @@ const Video = (props) => {
 
   return (
     <video
+      ref={videoElementRef}
+      //  muted // If you want autoplay to work without user interaction, video must be muted
       playsInline="1"
       autoPlay="1"
-      ref={videoElementRef}
+     muted
+      loop
+      //  controls={true}
       style={{
         left: "-1px",
         top: "-1px",
-        position: props.position || "absolute",
+        position: position || "absolute",
         width: "calc(100% + 2px)",
-        height: props.height || "calc(100% + 2px)",
+        height: height || "calc(100% + 2px)",
         objectFit: "contain",
         borderRadius: "8px",
-        transform: isPresenter ? 'initial' : `scaleX(-1)`,
+        transform: "initial"// Mirror the video if not presenter
       }}
     />
   );
 };
 
 export default Video;
+
