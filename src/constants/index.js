@@ -7,7 +7,7 @@ export const s3 = {
 }
 export const STREAMING_FLAGS = {
     is_direct_ingestion: true,
-       // is_low_latency: true
+    is_low_latency: true
 }
 export const streamingMode = 'jibri' // or 'srs'
 export const LTTS_API_SERVICE_URL = `${process.env.REACT_APP_LTTS_API_SERVICE_HOST}/api`;

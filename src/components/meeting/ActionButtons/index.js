@@ -51,11 +51,12 @@ import LiveStreamDialog from "../../shared/LiveStreamDialog";
 
 const useStyles = makeStyles((theme) => ({
   root: {
+    zIndex: 9,
     height: "44px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    bottom: "16px",
+    top: "16px",
     width: "100%",
     position: "fixed",
     color: color.white,
@@ -259,7 +260,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
     setFeatureStates({ ...featureStates });
   };
 
-  console.log('stream key', streamKey, streamingUrls)
   const startStreaming = async () => {
     if (featureStates.streaming) {
       return;
@@ -728,7 +728,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         </Box>
       </Hidden> */}
       <Hidden smDown>
-        <Box sx={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+        <Box sx={{display: 'flex', justifyContent: 'space-between', width: '100%', zIndex: 99}}>
         <StyledTooltip title={"Go Live"}>
           <Box className={classes.liveBox} onClick={toggleLiveDrawer("right", true)} >          
             <FiberManualRecordIcon className={classes.dot} />

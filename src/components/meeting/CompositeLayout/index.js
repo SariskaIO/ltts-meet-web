@@ -1,17 +1,18 @@
 import { Box, makeStyles } from '@material-ui/core';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
-import { getVideoCards } from '../../../utils';
+import { captureClick, getModerator, getVideoCards } from '../../../utils';
 import RailCard from '../../RailCard';
 import VideoBox from '../../shared/VideoBox';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useWindowResize } from '../../../hooks/useWindowResize';
 import { useDocumentSize } from '../../../hooks/useDocumentSize';
 import { ENTER_FULL_SCREEN_MODE } from '../../../constants';
 import classNames from 'classnames';
 import RailView from '../RailView';
 import CompositeVideoBox from '../../shared/CompositeVideoBox';
+import { setPinParticipant } from '../../../store/actions/layout';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -121,30 +122,45 @@ const CompositeLayout = () => {
     // if ( conference.getParticipantCount() === 2 ) {
     //     largeVideoId = conference.getParticipantsWithoutHidden()[0]?._id;
     // }
-    // largeVideoId = layout.pinnedParticipant.participantId || layout.presenterParticipantIds.slice(0).pop() || largeVideoId || myUserId;
+    // largeVideoId = Object.keys(remoteTracks)?.length && Object.keys(remoteTracks)[0] ;
+    largeVideoId = conference.myUserId();
+     //layout.pinnedParticipant.participantId || layout.presenterParticipantIds.slice(0).pop() || largeVideoId || myUserId;
    // isPresenter = layout.presenterParticipantIds.find(item=>item===largeVideoId);
     // if ( layout.pinnedParticipant.isPresenter === false ) {
     //     isPresenter = false;
     // }
 
     const tracks = { ...remoteTracks, [conference.myUserId()]: localTracks };
-    let recorderId;
-      tracks && Object.entries(tracks).map((key) => {
-        console.log('key valie', key, key[1]);
-        if(!(key[1] && key[1]?.length)){
-          recorderId = key[0]
-        }else{
-          largeVideoId = key[0];
+         
+    if(localTracks?.length > 0 ){
+      participantTracks = localTracks;
+      participantDetails =  conference.participants.get(largeVideoId)?._identity?.user; 
+    }else{
+       let moderator = getModerator(conference);
+       for (const [key, value] of Object.entries(remoteTracks)) {
+        console.log(`remoteTrackskey: ${key}: ${value}`, moderator);
+        if(key === moderator?._id){
+          participantTracks = value; 
         }
-      })      
-    participantTracks = remoteTracks[largeVideoId];
-    participantDetails =  conference.participants.get(largeVideoId)?._identity?.user; 
-
-    // if (largeVideoId === conference.myUserId()){
+       }
+      // [participantTracks] = Object.entries(remoteTracks).map((track) => {
+      //   console.log('moderator2 ', track, moderator, moderator?._id, typeof moderator?._id, Number(track[0]) === Number(moderator?._id))
+      //   if(Number(track[0]) === Number(moderator?._id)){
+      //     return track[1];
+      //   }else{
+      //     return [];
+      //   }
+        
+      // });
+      participantDetails = moderator?._identity?.user; 
+    }
+    
+console.log('localTracks re', localTracks, remoteTracks,remoteTracks[0], participantDetails, participantTracks, conference.myUserId(), conference.participants, conference.participants.keys().next().value)
+    // if (largeVideoId === conference.myUserId() ){
     //     participantTracks = localTracks;
     //     participantDetails = conference.getLocalUser();
     // }
-    const videoTrack = participantTracks?.find(track => track.getVideoType() === "camera");
+    const videoTrack = participantTracks?.find(track => track?.getVideoType() === "camera");
     const constraints = {
         "lastN": 25,
         "colibriClass": "ReceiverVideoConstraints",
@@ -175,6 +191,8 @@ const CompositeLayout = () => {
   const [showToggleButton, setShowToggleButton] = useState(false); // State to show/hide the toggle button
   const [timer, setTimer] = useState(null);
   const [muted, setMuted] = useState(true);
+  const layoutRef = useRef(null);
+  const dispatch = useDispatch();
 
     const selectVideo =(video) => {
         setSelectedVideo(video);
@@ -198,32 +216,16 @@ const CompositeLayout = () => {
         setMuted(false);
       }
 
-    useEffect(() => {
-        async function fetchData() {
-          const videosData = await getVideoCards();
-          if (videosData && videosData.length > 0) {
-            setVideos(videosData); // Set the list of videos
-         //   setSelectedVideo(videosData[0]); // Set the default selected video
-            setDefaultVideo(videosData[0]);
-          }
-        }
-        fetchData();
-      }, []);
-      console.log('participantTracks', participantTracks, participantTracks?.length);
-
-      
-      console.log('total tracks', largeVideoId, recorderId, tracks, remoteTracks, localTracks, conference.myUserId());
   return (
-    <>{
-      conference.myUserId() === recorderId ?
+    <>
     <Box
       onMouseEnter={() => setShowToggleButton(true)}
       onMouseLeave={() => setShowToggleButton(false)}
       className={classes.container}
+      ref={layoutRef}
+    //  onClick={(event)=>captureClick(event, layoutRef)}
     >
             <CompositeVideoBox
-              isFilmstrip={true}
-              isTranscription={true}
               width={'100%'}
               height={'100%'}
               isLargeVideo={true}
@@ -231,7 +233,6 @@ const CompositeLayout = () => {
               isPresenter={isPresenter}
               participantDetails={participantDetails}
               participantTracks={participantTracks}
-              localUserId={conference.myUserId()}
               largeVideoId={largeVideoId}
             />
       {/* <button id="button" style={{color: 'red', zIndex: 1}} onClick={handleUnmute}>click here</button> */}
@@ -240,7 +241,7 @@ const CompositeLayout = () => {
         
       </Box>
 
-      {showRailCards && (
+      {/* {showRailCards && ( */}
         <Box className={classes.railCardsContainer}>
           <RailView 
             isPresenter={isPresenter}
@@ -250,10 +251,11 @@ const CompositeLayout = () => {
             largeVideoId={largeVideoId} 
             localTracks={localTracks} 
             remoteTracks={remoteTracks}
+            participantDetails={participantDetails}
           />
           {/* <RailCard videos={videos} onVideoSelect={selectVideo} /> */}
         </Box>
-      )}
+      {/* )} */}
 
       {showToggleButton && !showRailCards && (
         <button onClick={showRailCardsWithTimer} className={classes.toggleButton}>
@@ -267,9 +269,6 @@ const CompositeLayout = () => {
         </button>
       )}
     </Box> 
-    :
-    <div>Recorder</div>
-    }
     </>
   )
 }

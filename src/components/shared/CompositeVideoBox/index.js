@@ -33,8 +33,7 @@ const CompositeVideoBox = ({
   isFilmstrip,
   isLargeVideo,
   isTranscription,
-  numParticipants,
-  largeVideoId
+  numParticipants
 }) => {
     
   const useStyles = makeStyles((theme) => ({
@@ -168,11 +167,11 @@ const CompositeVideoBox = ({
   const audioTrack = participantTracks?.find((track) => track?.isAudioTrack());
   const dispatch = useDispatch();
   const { documentWidth, documentHeight } = useDocumentSize();
-console.log('audioTrack', audioTrack, videoTrack, participantTracks)
+  
   const togglePinParticipant = () => {
     dispatch(setPinParticipant(participantDetails?.id, isPresenter));
   };
-
+  
   const audioIndicatorActiveClasses = classnames(classes.avatar, {
     largeVideo: isLargeVideo,
   });
@@ -196,13 +195,15 @@ console.log('audioTrack', audioTrack, videoTrack, participantTracks)
     }
 
   return (
+    <>{
+      participantDetails?.name === 'recorder' ? <></> : 
     <Box
       style={{ width: `${width}`, height: `${height}` }}
       onClick={togglePinParticipant}
       className={classes.root}
     >
       <Box className={classnames(classes.audioBox, { audioBox: true })}>
-        {!audioTrack?.isLocal() && <Audio track={audioTrack} />}
+        {<Audio track={audioTrack} />}
       </Box>
         <Box
           style={{
@@ -213,9 +214,10 @@ console.log('audioTrack', audioTrack, videoTrack, participantTracks)
           }}
           className={classes.videoWrapper}
         >
-          <Video track={videoTrack} largeVideoId={largeVideoId}/>
+          <Video isPresenter={isPresenter} track={videoTrack} />
         </Box>
     </Box>
+  }</>
   );
 };
 

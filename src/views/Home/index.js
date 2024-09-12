@@ -238,7 +238,7 @@ const Home = () => {
             <Grid className={classes.gridContainer} container>
                 <Grid item md={12} className={classes.gridChild}>
                     <Box >
-            {streamUrl ? <MediaTrack streamUrl={streamUrl} setLocalTracks={setLocalTracks} iAmRecorder={iAmRecorder} localTracksRedux={localTracksRedux}/> : null}
+            {streamUrl? <MediaTrack streamUrl={streamUrl} setLocalTracks={setLocalTracks} iAmRecorder={iAmRecorder} localTracksRedux={localTracksRedux}/> : null}
                         <LobbyRoom localTracks={localTracks} streamUrl={streamUrl} setStreamUrl={setStreamUrl} />
                         </Box>
                 </Grid>

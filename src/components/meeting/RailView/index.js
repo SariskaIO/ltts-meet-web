@@ -95,7 +95,7 @@ const useStyles = makeStyles(() => ({
     }
 }))
 
-export default function RailView({ onVideoSelect, remoteTracks, localTracks, panelHeight, gridItemWidth, gridItemHeight, largeVideoId, isPresenter }) {
+export default function RailView({ onVideoSelect, remoteTracks, localTracks, panelHeight, gridItemWidth, gridItemHeight, largeVideoId, isPresenter, togglePinParticipant, participantDetails }) {
   const [videos, setVideos] = useState([]);
   const conference = useSelector(state => state.conference);
     const layout = useSelector(state => state.layout);
@@ -103,7 +103,7 @@ export default function RailView({ onVideoSelect, remoteTracks, localTracks, pan
     // all participants 
     const tracks = { ...remoteTracks, [conference.myUserId()]: localTracks };
     // all tracks
-    let participants = [...conference.getParticipantsWithoutHidden(), { _identity: { user: conference.getLocalUser() }, _id: conference.myUserId() }];
+    let participants = [{ _identity: { user: conference.getLocalUser() }, _id: conference.myUserId() }, ...conference.getParticipantsWithoutHidden()];
     const activeClasses = classNames(classes.root, {
         'fullmode': layout.mode === ENTER_FULL_SCREEN_MODE
     });
@@ -127,9 +127,9 @@ export default function RailView({ onVideoSelect, remoteTracks, localTracks, pan
     //     participants  = participants.filter(p=>!(p._id === largeVideoId && !p.presenter));
     // }
 
-    // if (participants.length <= 0)  {
-    //     return null;
-    // }
+    if (participants.length <= 0)  {
+        return null;
+    }
 
 
   const handleVideoSelect = (video) => {
@@ -153,12 +153,14 @@ export default function RailView({ onVideoSelect, remoteTracks, localTracks, pan
       video.pause();
     }
   };
+ // let recorder = participants?.filter(participant => participant?._identity?.user?.name === 'recorder')[0];
 
   return (
     <Box className={classes.container}>
       <Typography className={classes.title} >New TV Channels</Typography>
       <Box className={classes.cardContainer}>
-        {participants.slice(0, 5).map((participant, index) => (
+        {participants.map((participant, index) => {
+         return participant?._identity?.user?.name === 'recorder' ? <></> :
           <Box
             key={index}
            // onMouseEnter={handleMouseEnter}
@@ -173,6 +175,7 @@ export default function RailView({ onVideoSelect, remoteTracks, localTracks, pan
               isFilmstrip={false}
               participantDetails={participant?._identity?.user}
               participantTracks={tracks[participant._id]}
+              togglePinParticipant={togglePinParticipant}
             />
             {/* <ReactPlayer  
               url={video.url}
@@ -198,7 +201,7 @@ export default function RailView({ onVideoSelect, remoteTracks, localTracks, pan
                   padding:0
                 }}
               >
-                {participant?._identity?.user?.name}
+                {participant?._identity?.user?.name === 'recorder' ? '' : participant?._identity?.user?.name}
               </Typography>
               <Typography
                 variant="body2"
@@ -209,13 +212,14 @@ export default function RailView({ onVideoSelect, remoteTracks, localTracks, pan
                   padding:0
                  }}
               >
-                {'title'}
+                {participant?._identity?.user?.name === 'recorder' ? '' : 'title'}
               </Typography>
             </Box>
           </Box>
-        ))}
+        })}
       </Box>
     </Box>
+    
   );
 }
 

@@ -11,11 +11,9 @@ const Video = (props) => {
   const videoElementRef = useRef(null);
   useEffect(() => {
     const videoElement = videoElementRef.current;
-    console.log('out track && videoElement', track, videoElement, largeVideoId)
     try {
         if (track && videoElement) {
           // Attach the media stream track to the video element
-          console.log('track && videoElement', track, videoElement, largeVideoId)
           track?.attach(videoElement);
           
           // return () => {
@@ -39,6 +37,8 @@ const Video = (props) => {
       //  muted // If you want autoplay to work without user interaction, video must be muted
       playsInline="1"
       autoPlay="1"
+     muted
+      loop
       //  controls={true}
       style={{
         left: "-1px",

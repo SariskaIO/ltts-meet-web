@@ -218,7 +218,6 @@ const Meeting = () => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.TRACK_REMOVED,
       (track) => {
-        console.log('TRACK_REMOVED', track);
         dispatch(removeRemoteTrack(track));
       }
     );
@@ -226,7 +225,6 @@ const Meeting = () => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.TRACK_ADDED,
       (track) => {
-        console.log('TRACK_ADDED', track);
         if (track.isLocal()) {
           return;
         }
@@ -497,10 +495,10 @@ const Meeting = () => {
     <Box
       className={classes.root}
     >
+      <ActionButtons dominantSpeakerId={dominantSpeakerId} />
       {/* <SpeakerLayout dominantSpeakerId={dominantSpeakerId}/> */}
         <CompositeLayout dominantSpeakerId={dominantSpeakerId} />
       
-      <ActionButtons dominantSpeakerId={dominantSpeakerId} />
       
       <SnackbarBox notification={notification} />
       <ReconnectDialog open={layout.disconnected === "lost"} />

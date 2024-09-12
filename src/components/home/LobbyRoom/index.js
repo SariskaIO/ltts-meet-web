@@ -135,7 +135,6 @@ const LobbyRoom = ({localTracks, streamUrl, setStreamUrl}) => {
     conference.addEventListener(
       SariskaMediaTransport.events.conference.CONFERENCE_JOINED,
       () => {
-        console.log('CONFERENCE_JOINED')
         setLoading(false);
         dispatch(addConference(conference));
         dispatch(setProfile(conference.getLocalUser()));
