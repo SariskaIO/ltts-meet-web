@@ -128,7 +128,7 @@ export default function RailCard({ onVideoSelect }) {
 
   return (
     <Box className={classes.container}>
-      <Typography className={classes.title} >New TV Channels</Typography>
+      <Typography className={classes.title} >Currently showing ads</Typography>
       <Box className={classes.cardContainer}>
         {videos.slice(0, 5).map((video, index) => (
           <Box

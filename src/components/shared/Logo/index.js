@@ -4,14 +4,14 @@ import { Link } from 'react-router-dom'
 import { color } from '../../../assets/styles/_color';
 import { profile } from "../../../store/actions/profile";
 import { useSelector } from 'react-redux';
-import logo from '../../../assets/images/shared/logo.png';
+import logo from '../../../assets/images/shared/logo.webp';
 
 const Logo = ({width, height}) => {
     const profile = useSelector(state => state.profile);
     const videoTrack =  useSelector((state) => state.localTrack).find(track=>track?.isVideoTrack());
 
 const useStyles = makeStyles(()=>({
-  logo: {
+  logo: { 
     display: 'flex',
       textDecoration: 'none',
       color: color.white,

@@ -137,7 +137,7 @@ export async function startStreamingInSRSMode(roomName, streamKey, flags) {
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem("SARISKA_TOKEN")}`
+            'Authorization': `Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjM1YzVjMzMwYzgzMDlmNWE1MDNkMGE1Yzc0YmZmOGRhNzI2OGEzYWRiNTM0Y2I5YTYyYjljYzZiYmZjZGUwYTMiLCJ0eXAiOiJKV1QifQ.eyJjb250ZXh0Ijp7InVzZXIiOnsiaWQiOiIxMDgxMTgyOTQ2NzU0Njk5ODgwMTIiLCJhdmF0YXIiOiIjQUVFOEFEIiwibmFtZSI6IkJyYWplbmRyYSBLdW1hciIsImVtYWlsIjoiYnJhamVuZHJhQHNhcmlza2EuaW8ifSwiZ3JvdXAiOiI5In0sInN1YiI6ImF2b241amN0bnBuMmQ5OHA0ZGVtdGYiLCJyb29tIjoiKiIsImlhdCI6MTczNzAyNjU1NywibmJmIjoxNzM3MDI2NTU3LCJpc3MiOiJzYXJpc2thIiwiYXVkIjoibWVkaWFfbWVzc2FnaW5nX2NvLWJyb3dzaW5nIiwiZXhwIjoxNzM3MTk5MzU3fQ.CPSjy8EZsbc8kUCrlvFgrY0ApewTSUXU7OJTNXi4mdkNW9mbA8z1LxrtKtouZZYpMXIGn6QsKbZkAke7qCsp38oJvV-FW0hiW3jsUpIrfv3t7zqR19NMsW2wG47B3QZKEU8we3ROhGG-hIuMD3oJlGQVl54ikAsoc4bV3qNMAUAzQSzX6ud-ejvomSVQujlepzSzj8V3-arA-wJJdkUX02lH2ALYnQJ6-rEi3NSGr7LTTG2MK3mn0ekT1qJIgsD-1kgn32Qv5XYXvmsIgS6mYx57V8KFpUv9nQg5pOJwjgyf8uRNg_uYd-zCeCqsbWeTSd-gAmox1gLzVHVNOgU3oQ`
         },
         body: streamKey ? JSON.stringify({
             stream_keys: [

@@ -283,6 +283,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         })
       );
       const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle, streamKey);
+      console.log("streamingResponse", streamingResponse);
        if(streamingResponse.started){
         setStreamingUrls(streamingResponse);
           conference.setLocalParticipantProperty("streaming", true);

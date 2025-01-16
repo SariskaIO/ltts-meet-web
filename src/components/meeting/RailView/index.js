@@ -157,7 +157,7 @@ export default function RailView({ onVideoSelect, remoteTracks, localTracks, pan
 
   return (
     <Box className={classes.container}>
-      <Typography className={classes.title} >New TV Channels</Typography>
+      <Typography className={classes.title} >Ads</Typography>
       <Box className={classes.cardContainer}>
         {participants.map((participant, index) => {
          return participant?._identity?.user?.name === 'recorder' ? <></> :

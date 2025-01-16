@@ -6,8 +6,7 @@ export const s3 = {
     }
 }
 export const STREAMING_FLAGS = {
-    is_direct_ingestion: true,
-    is_low_latency: true
+    is_direct_ingestion: true
 }
 export const streamingMode = 'jibri' // or 'srs'
 export const LTTS_API_SERVICE_URL = `${process.env.REACT_APP_LTTS_API_SERVICE_HOST}/api`;
@@ -18,8 +17,8 @@ export const API_URL_LIVE_BROADCASTS = 'https://content.googleapis.com/youtube/v
 export const DISCOVERY_DOCS = [ 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest' ];
 export const CREATE_YOUTUBE_LIVE_STREAMS = "https://www.googleapis.com/youtube/v3/liveStreams";
 export const CREATE_YOUTUBE_LIVE_BROADCASTS = "https://www.googleapis.com/youtube/v3/liveBroadcasts";
-export const LIVE_STREAMING_START_URL = `${process.env.REACT_APP_API_SERVICE_HOST}terraform/v1/hooks/srs/startRecording`;
-export const LIVE_STREAMING_STOP_URL = `${process.env.REACT_APP_API_SERVICE_HOST}terraform/v1/hooks/srs/stopRecording`;
+export const LIVE_STREAMING_START_URL = `https://api.dev.sariska.io/terraform/v1/hooks/srs/startRecording`;
+export const LIVE_STREAMING_STOP_URL = `https://api.dev.sariska.io/terraform/v1/hooks/srs/stopRecording`;
 export const GET_PRESENTATION_STATUS = "GET_PRESENTATION_STATUS";
 export const RECEIVED_PRESENTATION_STATUS = "RECEIVED_PRESENTATION_STATUS";
 export const GOOGLE_API_STATES = {
