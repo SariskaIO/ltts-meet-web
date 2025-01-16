@@ -37,7 +37,7 @@ const Video = (props) => {
       //  muted // If you want autoplay to work without user interaction, video must be muted
       playsInline="1"
       autoPlay="1"
-     muted
+      muted
       loop
       //  controls={true}
       style={{

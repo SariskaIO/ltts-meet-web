@@ -228,6 +228,7 @@ const Meeting = () => {
         if (track.isLocal()) {
           return;
         }
+        console.log('remote terack', track)
         dispatch(addRemoteTrack(track));
       }
     );

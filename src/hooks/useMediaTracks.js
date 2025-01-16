@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
-import { apiCall, getVideoCards } from "../utils";
+import { apiCall, detectBrowser, getVideoCards } from "../utils";
 import Hls from "hls.js";
 import { useDispatch } from "react-redux";
 import { addLocalTrack } from "../store/actions/track";
@@ -66,6 +66,7 @@ export const useMediaTracks = (streamUrl, setLocalTracks, iAmRecorder, localTrac
       };
 
       if (Hls.isSupported()) {
+        console.log('isSupported')
           const hls = new Hls();
           hls.loadSource(hlsUrl);
           hls.attachMedia(videoElement);
@@ -73,6 +74,11 @@ export const useMediaTracks = (streamUrl, setLocalTracks, iAmRecorder, localTrac
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
               videoElement.play().catch(e => console.error("Error playing HLS stream", e));
           });
+          const browser = detectBrowser();
+          const audioStream = browser ==='Chrome' ? videoElement.captureStream() :
+                              browser ==='Firefox' ? videoElement.mozCaptureStream() :
+                              browser ==='Safari' ? videoElement?.webkitCaptureStream() :
+                              null;
 
           videoElement.onloadedmetadata = () => {
               canvas.width = videoElement.videoWidth;
@@ -80,7 +86,12 @@ export const useMediaTracks = (streamUrl, setLocalTracks, iAmRecorder, localTrac
 
               const canvasStream = canvas.captureStream(30); // 30 FPS
               const videoTrack = canvasStream.getVideoTracks()[0];
-              const audioTrack = videoElement.captureStream().getAudioTracks()[0];
+              // Fallback for capturing audio tracks
+          //  const audioStream = capturedStream;
+            console.log('audioStream', audioStream)
+            const audioTrack = audioStream && audioStream.getAudioTracks ? audioStream.getAudioTracks()[0] : null;
+
+            //  const audioTrack = videoElement.mozCaptureStream().getAudioTracks()[0];
               function drawVideoFrame() {
                   if (!videoElement.paused && !videoElement.ended) {
                       ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);

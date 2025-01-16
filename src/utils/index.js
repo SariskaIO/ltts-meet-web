@@ -137,7 +137,7 @@ export async function startStreamingInSRSMode(roomName, streamKey, flags) {
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem("SARISKA_TOKEN")}`
+            'Authorization': `Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjM1YzVjMzMwYzgzMDlmNWE1MDNkMGE1Yzc0YmZmOGRhNzI2OGEzYWRiNTM0Y2I5YTYyYjljYzZiYmZjZGUwYTMiLCJ0eXAiOiJKV1QifQ.eyJjb250ZXh0Ijp7InVzZXIiOnsiaWQiOiJucGh3Z245cyIsImF2YXRhciI6IiM4RTQwQkUiLCJuYW1lIjoiZGVsaWdodGZ1bF9tYW1tYWwifSwiZ3JvdXAiOiI5In0sInN1YiI6ImF2b241amN0bnBuMmQ5OHA0ZGVtdGYiLCJyb29tIjoiKiIsImlhdCI6MTczNzAyNzgyOCwibmJmIjoxNzM3MDI3ODI4LCJpc3MiOiJzYXJpc2thIiwiYXVkIjoibWVkaWFfbWVzc2FnaW5nX2NvLWJyb3dzaW5nIiwiZXhwIjoxNzM3MjAwNjI4fQ.eOdRHmJa_-_CMW09eejJGZUpQojGKatPv8KVVX7IjqYbd2ftEuIZmfoi2vD41iOx_sDVePrXW8KERSPK7lPDPU1lAVTjBlnEJg8XUcZAH00l9mE9C02e5JQV9cX4Va3B2nJTXyE9t3Rd0XCf1TVU_PdGh9OT-kKeo1dJWaP8kQiezfQjSfs5m99Q-JubTtkqzhF0Ze6l_tBn0wX7oolfy16SzPKi_0DSLW9noTFfWA2Kq54iY26Wg6DHl4D5x6PDQ3ljPc9Pg1jDyCF_EaUd_KiWc2nrqYj1eVh3nq3q_QHOcdzhPI7AXUJzc2pfTG5-TS9o2VjFUw5lzh1Gs8TDCQ`
         },
         body: streamKey ? JSON.stringify({
             stream_keys: [
@@ -772,3 +772,22 @@ export const getModerator = (conference) => {
     }
   }
 
+
+
+  export function detectBrowser() {
+    const userAgent = navigator.userAgent;
+    
+    if (userAgent.includes("Firefox")) {
+        return "Firefox";
+    } else if (userAgent.includes("Chrome") && !userAgent.includes("Chromium") && !userAgent.includes("Edg")) {
+        return "Chrome";
+    } else if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) {
+        return "Safari";
+    } else if (userAgent.includes("Edg")) {
+        return "Edge";
+    } else if (userAgent.includes("Opera") || userAgent.includes("OPR")) {
+        return "Opera";
+    } else {
+        return "Other";
+    }
+}

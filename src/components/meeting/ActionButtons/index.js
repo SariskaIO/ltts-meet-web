@@ -48,6 +48,7 @@ import LiveStreamingDetails from "../../shared/LiveStreamingDetails";
 import { showNotification } from "../../../store/actions/notification";
 import googleApi from "../../../utils/google-apis";
 import LiveStreamDialog from "../../shared/LiveStreamDialog";
+import SimpleBackdrop from "../../shared/Backdrop";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -252,8 +253,17 @@ const ActionButtons = ({ dominantSpeakerId }) => {
   const [streamingUrls, setStreamingUrls] = useState([]);
   const [streamKey, setStreamKey] = useState('');
   const [isLowLatencyUrl, setIsLowLatencyUrl] = useState(false);
+  const [openBackdrop, setOpenBackdrop] = React.useState(false);
 
   const streamingSession = useRef(null);
+
+
+  const handleBackdropClose = () => {
+    setOpenBackdrop(false);
+  };
+  const handleBackdropToggle = () => {
+    setOpenBackdrop(!openBackdrop);
+  };
 
   const action = (actionData) => {
     featureStates[actionData.key] = actionData.value;
@@ -274,122 +284,27 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         })
       );
     }
+    dispatch(
+      showSnackbar({
+        severity: "info",
+        message: "Starting Live Streaming",
+        autoHide: false,
+      })
+    );
+  //  setOpenBackdrop(true);
     if(streamingMode === 'srs'){
-      dispatch(
-        showSnackbar({
-          severity: "info",
-          message: "Starting Live Streaming",
-          autoHide: false,
-        })
-      );
       const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle, streamKey);
        if(streamingResponse.started){
         setStreamingUrls(streamingResponse);
           conference.setLocalParticipantProperty("streaming", true);
+        //  setOpenBackdrop(false);
             dispatch(
               showSnackbar({ autoHide: true, message: "Live streaming started" })
             );
           action({ key: "streaming", value: true }); 
        } 
     }else{
-      await googleApi.signInIfNotSignedIn();
-      let youtubeBroadcasts;
-
-      try {
-        youtubeBroadcasts = await googleApi.requestAvailableYouTubeBroadcasts();
-      } catch (e) {
-        dispatch(
-          showNotification({
-            autoHide: true,
-            message: e?.result?.error?.message,
-            severity: "info",
-          })
-        );
-        return;
-      }
-
-      if (youtubeBroadcasts.status !== 200) {
-        dispatch(
-          showNotification({
-            autoHide: true,
-            message: "Could not fetch YouTube broadcasts",
-            severity: "info",
-          })
-        );
-      }
-      setBroadcasts(youtubeBroadcasts.result.items);
-      setOpenLivestreamDialog(true);
-    }
-  };
-
-  const createLiveStream = async () => {
-    const title = `test__${Date.now()}`;
-    const resposne = await googleApi.createLiveStreams(title);
-
-    const streamName = resposne.cdn?.ingestionInfo?.streamName;
-    if (!streamName) {
-      return;
-    }
-
-    dispatch(
-      showSnackbar({
-        severity: "info",
-        message: "Starting Live Streaming",
-        autoHide: false,
-      })
-    );
-    if(streamingMode === 'srs'){
-       const streamingResponse = await startStreamingInSRSMode(profile.meetingTitle);
-       if(streamingResponse.started){
-          conference.setLocalParticipantProperty("streaming", true);
-            dispatch(
-              showSnackbar({ autoHide: true, message: "Live streaming started" })
-            );
-          action({ key: "streaming", value: true }); 
-       }
-    }else{
       const streamingResponse = await startStreamingInSRSMode(null, null, STREAMING_FLAGS);
-         if(streamingResponse.started){
-          const session = await conference.startRecording({
-            mode: SariskaMediaTransport.constants.recording.mode.STREAM,
-            streamId: streamingResponse.rtmp_ingest_url,
-          //  streamId: `rtmp://a.rtmp.youtube.com/live2/${streamName}`,
-          });
-          setIsLowLatencyUrl(true);
-          setStreamingUrls(streamingResponse)
-          streamingSession.current = session;
-        } 
-    }
-    setOpenLivestreamDialog(false);
-  };
-
-  const selectedBroadcast = async (boundStreamID) => {
-    const selectedStream =
-      await googleApi.requestLiveStreamsForYouTubeBroadcast(boundStreamID);
-
-    if (selectedStream.status !== 200) {
-      dispatch(
-        showNotification({
-          autoHide: true,
-          message: "No live streams found",
-          severity: "error",
-        })
-      );
-      return;
-    }
-
-    dispatch(
-      showSnackbar({
-        severity: "info",
-        message: "Starting Live Streaming",
-        autoHide: false,
-      })
-    );
-    const streamName =
-      selectedStream.result.items[0]?.cdn?.ingestionInfo?.streamName;
-    setOpenLivestreamDialog(false);
-
-    const streamingResponse = await startStreamingInSRSMode(null, null, STREAMING_FLAGS);
        if(streamingResponse.started){
         const session = await conference.startRecording({
           mode: SariskaMediaTransport.constants.recording.mode.STREAM,
@@ -399,7 +314,12 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         setIsLowLatencyUrl(true);
         setStreamingUrls(streamingResponse)
         streamingSession.current = session;
+       // setOpenBackdrop(false);
+        dispatch(
+          showSnackbar({ autoHide: true, message: "Live streaming started" })
+        );
        } 
+    }
   };
 
   const stopStreaming = async () => {
@@ -435,10 +355,6 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         localStorage.getItem("streaming_session_id")
       );
     }
-  };
-
-  const closeLiveStreamDialog = () => {
-    setOpenLivestreamDialog(false);
   };
 
   const toggleLiveDrawer = (anchor, open) => (event) => {
@@ -740,6 +656,7 @@ const ActionButtons = ({ dominantSpeakerId }) => {
         </StyledTooltip> */}
         
         </Box>
+        <SimpleBackdrop open={openBackdrop} />
         <DrawerBox
           open={liveState["right"]}
           onClose={toggleLiveDrawer("right", false)}
@@ -747,13 +664,12 @@ const ActionButtons = ({ dominantSpeakerId }) => {
           {liveList("right")}
         </DrawerBox>
       </Hidden>
-      <LiveStreamDialog
+      {/* <LiveStreamDialog
         close={closeLiveStreamDialog}
         createLiveStream={createLiveStream}
         open={openLivestreamDialog}
-        broadcasts={broadcasts}
-        selectedBroadcast={selectedBroadcast}
-      />
+      //  selectedBroadcast={selectedBroadcast}
+      /> */}
       <Box className={classes.permissions}>
         {/* <StyledTooltip
           title={

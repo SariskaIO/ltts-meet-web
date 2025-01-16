@@ -58,13 +58,6 @@ const LiveStreamingDetails = ({featureStates, stopStreaming, startStreaming, str
   return (
     <Box className={classes.root}>
       <Box sx={{mt: 1}}>
-      <SearchBox
-          placeholder={"Enter You Tube Stream key"}
-          value={streamKey}
-          id="streamKey"
-          name="streamKey"
-          handleChange={handleStreamKeyChange}
-        />
         <Button
           variant="outlined"
           onClick={featureStates.streaming ? stopStreaming : startStreaming}
@@ -75,7 +68,7 @@ const LiveStreamingDetails = ({featureStates, stopStreaming, startStreaming, str
         <Typography style={{color: color.white, marginTop: '0.5rem', marginLeft: '8px', marginBottom: '8px'}}>Click to copy Streaming Url</Typography>
         {isLowLatencyUrl ? 
              <Box sx={{display: 'flex', mb: 1, mt: 1}} >
-             <Button style={{color: color.primaryLight}} onClick={()=>copyToClipboard(streamingUrls['low_latency_hls_url'] || streamingUrls['low_latency_hls_url'])}>
+             <Button style={{color: color.primaryLight}} onClick={()=>copyToClipboard(streamingUrls['low_latency_hls_url'] || streamingUrls['hls_url'])}>
                low_latency_hls_url
              </Button>
              </Box>

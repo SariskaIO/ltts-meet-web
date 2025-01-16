@@ -23,23 +23,14 @@ const useStyles = makeStyles({
 
 function SimpleDialog(props) {
     const classes = useStyles();
-    const { onClose, selectedValue, open, broadcasts, selectedBroadcast, createLiveStream } = props;
+    const { onClose, selectedValue, open, createLiveStream } = props;
 
     const handleClose = () => {
         onClose(selectedValue);
     };
 
-    const handleListItemClick = (value) => {
-        selectedBroadcast(value.contentDetails.boundStreamId);
-    };
 
     const filterBroadcasts = [];
-
-    broadcasts.forEach(item=>{
-        if (!filterBroadcasts.find(selected=>selected.snippet.title === item.snippet.title)) {
-            filterBroadcasts.push(item);
-        }
-    });
 
     return (
         <Dialog onClose={handleClose} aria-labelledby="simple-dialog-title" open={open}>
@@ -49,7 +40,7 @@ function SimpleDialog(props) {
             { filterBroadcasts.length > 0 && 
                 <List>
                     {filterBroadcasts.map((broadcast) => (
-                        <ListItem button onClick={() => handleListItemClick(broadcast)} key={broadcast.snippet.title}>
+                        <ListItem button >
                             <ListItemAvatar>
                                 <Avatar className={classes.avatar}>
                                     <PersonIcon />
@@ -85,8 +76,8 @@ SimpleDialog.propTypes = {
     selectedValue: PropTypes.string
 };
 
-export default function LiveStreamDialog({broadcasts, selectedBroadcast, open, createLiveStream, close}) {
+export default function LiveStreamDialog({open, createLiveStream, close}) {
     return (
-        <SimpleDialog createLiveStream={createLiveStream} open={open} selectedBroadcast={selectedBroadcast} broadcasts={broadcasts}  onClose={close} />
+        <SimpleDialog createLiveStream={createLiveStream} open={open}  onClose={close} />
     );
 }

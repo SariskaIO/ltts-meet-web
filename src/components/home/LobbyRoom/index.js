@@ -35,7 +35,7 @@ const LobbyRoom = ({localTracks, streamUrl, setStreamUrl}) => {
   const queryParams = useParams();
   const [meetingTitle, setMeetingTitle] = useState();
   const [name, setName] = useState(generateUsername());
-  const [buttonText, setButtonText] = useState("Start Meeting");
+  const [buttonText, setButtonText] = useState("Start Mixer");
   const profile = useSelector((state) => state.profile);
   const iAmRecorder = window.location.hash.indexOf("iAmRecorder") >= 0;
   const testMode = window.location.hash.indexOf("testMode") >= 0;
@@ -64,7 +64,7 @@ const LobbyRoom = ({localTracks, streamUrl, setStreamUrl}) => {
     if (!meetingTitle) {
       dispatch(
         showNotification({
-          message: "Meeting Title is required",
+          message: "Channel Name is required",
           severity: "warning",
           autoHide: true,
         })
@@ -448,7 +448,7 @@ const LobbyRoom = ({localTracks, streamUrl, setStreamUrl}) => {
         {queryParams.meetingId ? 
           <Typography className={classes.headerJoin}>Join {queryParams.meetingId}</Typography>
           :
-          <Typography className={classes.header}>Create Meeting</Typography>
+          <Typography className={classes.header}>Create Mixer</Typography>
         }
         </Box>
         <Box className={classes.action}>
@@ -472,7 +472,7 @@ const LobbyRoom = ({localTracks, streamUrl, setStreamUrl}) => {
                     e.preventDefault();
                   }
                 }}
-                label="Meeting Title"
+                label="Channel Name"
                 width="20vw"
                 value={meetingTitle}
                 onChange={handleTitleChange}
